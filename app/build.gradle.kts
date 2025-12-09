@@ -40,8 +40,10 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
         debug {
-            isDebuggable = false
-            isProfileable = true
+            isDebuggable = true
+            isProfileable = false
+            applicationIdSuffix = ".debug"
+            resValue("string", "app_name", "Chora Debug")
         }
     }
     compileOptions {
