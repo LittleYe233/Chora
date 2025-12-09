@@ -41,6 +41,8 @@ android {
         debug {
             isDebuggable = false
             isProfileable = true
+            applicationIdSuffix = ".debug"
+            resValue("string", "app_name", "Chora Debug")
         }
     }
     compileOptions {
