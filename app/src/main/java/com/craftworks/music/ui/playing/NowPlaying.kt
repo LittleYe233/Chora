@@ -33,13 +33,17 @@ import coil.imageLoader
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import coil.request.SuccessResult
-import com.craftworks.music.managers.SettingsManager
+import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 
 var lyricsOpen by mutableStateOf(false)
 var playQueueOpen by mutableStateOf(false)
+
+enum class NowPlayingTitleAlignment {
+    LEFT, CENTER, RIGHT
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
@@ -49,8 +53,8 @@ fun NowPlayingContent(
     metadata: MediaMetadata? = null
 ) {
     val context = LocalContext.current
-    val settingsManager = remember { SettingsManager(context) }
-    val backgroundStyle by settingsManager.npBackgroundFlow.collectAsStateWithLifecycle("Animated Blur")
+    val settingsManager = remember { AppearanceSettingsManager(context) }
+    val backgroundStyle by settingsManager.npBackgroundFlow.collectAsStateWithLifecycle(NowPlayingBackground.SIMPLE_ANIMATED_BLUR)
     var backgroundDarkMode by remember { mutableStateOf(false) }
 
     var colors by remember {
@@ -61,11 +65,11 @@ fun NowPlayingContent(
     backgroundDarkMode = isSystemInDarkTheme()
 
     LaunchedEffect(metadata?.artworkUri) {
-        if (metadata?.artworkUri != null && backgroundStyle != "Plain") {
+        if (metadata?.artworkUri != null && backgroundStyle != NowPlayingBackground.PLAIN) {
             colors = extractColorsFromUri(metadata.artworkUri.toString(), context)
 
             backgroundDarkMode =
-                (colors.elementAtOrNull(2) ?: Color.Black).customLuminance() <= 0.75f
+                (colors.elementAtOrNull(2) ?: Color.Black).customLuminance() <= 0.8f
             println("Generated new colors for song ${metadata.artworkUri}! Luminance: ${colors.elementAtOrNull(2)?.customLuminance()}")
         }
         iconTextColor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -77,11 +81,12 @@ fun NowPlayingContent(
         }
     }
 
-    val targetOverlayColor = if (backgroundStyle == "Animated Blur") {
+    val targetOverlayColor = if (backgroundStyle == NowPlayingBackground.ANIMATED_BLUR || backgroundStyle == NowPlayingBackground.SIMPLE_ANIMATED_BLUR) {
         if (backgroundDarkMode) Color.Black.copy(0.2f) else Color.White.copy(0.2f)
     } else {
         Color.Transparent
     }
+
     NowPlaying_Background(colors, backgroundStyle, targetOverlayColor)
 
     if ((LocalConfiguration.current.uiMode and Configuration.UI_MODE_TYPE_MASK == Configuration.UI_MODE_TYPE_TELEVISION) ||

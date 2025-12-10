@@ -16,6 +16,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -35,7 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
@@ -126,9 +127,6 @@ fun SongsScreen(
                                 )
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onBackground),
                         modifier = Modifier
                             .widthIn(min = 128.dp, max = 320.dp)
                     ) {
@@ -140,7 +138,7 @@ fun SongsScreen(
                         }
                     }
                     // Shuffle all
-                    Button(
+                    OutlinedButton(
                         onClick = {
                             mediaController?.shuffleModeEnabled = true
                             val random = allSongsList.subList(1, allSongsList.size).indices.random()
@@ -154,9 +152,6 @@ fun SongsScreen(
                                 )
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onBackground),
                         modifier = Modifier
                             .widthIn(min = 128.dp, max = 320.dp)
                     ) {

@@ -2,6 +2,7 @@ package com.craftworks.music
 
 import android.app.Activity
 import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
@@ -66,6 +67,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -75,10 +79,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.craftworks.music.data.BottomNavItem
 import com.craftworks.music.data.model.Screen
-import com.craftworks.music.managers.SettingsManager
+import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.player.ChoraMediaLibraryService
 import com.craftworks.music.player.rememberManagedMediaController
-import com.craftworks.music.ui.elements.bounceClick
 import com.craftworks.music.ui.elements.dialogs.NoMediaProvidersDialog
 import com.craftworks.music.ui.playing.NowPlayingContent
 import com.craftworks.music.ui.playing.NowPlayingMiniPlayer
@@ -94,6 +97,7 @@ import java.util.Locale
 import kotlin.system.exitProcess
 
 var showNoProviderDialog = mutableStateOf(false)
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -173,6 +177,7 @@ class MainActivity : ComponentActivity() {
 
                 onBackPressedDispatcher.addCallback(this, backCallback)
 
+
                 Scaffold(
                     bottomBar = {
                         AnimatedBottomNavBar(navController, scaffoldState)
@@ -215,15 +220,33 @@ class MainActivity : ComponentActivity() {
                                     if (scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded) {
                                         currentView.keepScreenOn = true
                                         backCallback.isEnabled  = true
+
+                                        /* Restore nav bars.
+                                        @Suppress("DEPRECATION")
+                                        currentView.systemUiVisibility =
+                                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                                                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                                                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                                                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                                                    View.SYSTEM_UI_FLAG_FULLSCREEN or
+                                                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                                        */
+
                                         Log.d("NOW-PLAYING", "KeepScreenOn: True")
                                     } else {
                                         currentView.keepScreenOn = false
                                         backCallback.isEnabled = false
+
+                                        /* Restore nav bars.
+                                        @Suppress("DEPRECATION")
+                                        currentView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                        */
                                         Log.d("NOW-PLAYING", "KeepScreenOn: False")
                                     }
 
                                     onDispose {
                                         currentView.keepScreenOn = false
+                                        backCallback.isEnabled = false
                                         Log.d("NOW-PLAYING", "KeepScreenOn: False")
                                     }
                                 }
@@ -307,7 +330,7 @@ fun AnimatedBottomNavBar(
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    val orderedNavItems = SettingsManager(context).bottomNavItemsFlow.collectAsState(
+    val orderedNavItems = AppearanceSettingsManager(context).bottomNavItemsFlow.collectAsState(
         initial = listOf(
             BottomNavItem(
                 "Home", R.drawable.rounded_home_24, "home_screen"
@@ -341,7 +364,7 @@ fun AnimatedBottomNavBar(
                 if (!item.enabled) return@forEachIndexed
                 NavigationBarItem(
                     selected = item.screenRoute == backStackEntry?.destination?.route,
-                    modifier = Modifier.bounceClick(),
+                    //modifier = Modifier.bounceClick(),
                     onClick = {
                         if (item.screenRoute == backStackEntry?.destination?.route) return@NavigationBarItem
                         navController.navigate(item.screenRoute) {

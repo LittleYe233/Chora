@@ -1,13 +1,17 @@
 package com.craftworks.music.data.di
 
+import android.content.Context
 import com.craftworks.music.data.datasource.local.LocalDataSource
 import com.craftworks.music.data.datasource.lrclib.LrclibDataSource
 import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
-import com.craftworks.music.managers.SettingsManager
+import com.craftworks.music.managers.settings.AppearanceSettingsManager
+import com.craftworks.music.managers.settings.LocalDataSettingsManager
+import com.craftworks.music.managers.settings.MediaProviderSettingsManager
 import com.craftworks.music.providers.local.LocalProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -19,9 +23,10 @@ object DataSourceModule {
     @Provides
     fun provideLocalDataSource(
         localProvider: LocalProvider,
-        settingsManager: SettingsManager
+        localDataSettingsManager: LocalDataSettingsManager,
+        appearanceSettingsManager: AppearanceSettingsManager
     ): LocalDataSource {
-        return LocalDataSource(localProvider, settingsManager)
+        return LocalDataSource(localProvider, localDataSettingsManager, appearanceSettingsManager)
     }
 
     @Singleton
@@ -33,8 +38,9 @@ object DataSourceModule {
     @Singleton
     @Provides
     fun provideLrcLibDataSource(
-        settingsManager: SettingsManager
+        settingsManager: MediaProviderSettingsManager,
+        @ApplicationContext context: Context
     ): LrclibDataSource {
-        return LrclibDataSource(settingsManager)
+        return LrclibDataSource(settingsManager, context)
     }
 }

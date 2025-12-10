@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -51,7 +52,7 @@ import com.craftworks.music.data.model.albumList
 import com.craftworks.music.data.model.songsList
 import com.craftworks.music.data.model.toAlbum
 import com.craftworks.music.managers.NavidromeManager
-import com.craftworks.music.managers.SettingsManager
+import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.player.SongHelper
 import com.craftworks.music.ui.viewmodels.AlbumScreenViewModel
 import com.craftworks.music.ui.viewmodels.SongsScreenViewModel
@@ -69,7 +70,7 @@ fun SongsHorizontalColumn(
 ){
     val listState = rememberLazyListState()
 
-    val showDividers by SettingsManager(LocalContext.current).showProviderDividersFlow.collectAsStateWithLifecycle(true)
+    val showDividers by AppearanceSettingsManager(LocalContext.current).showProviderDividersFlow.collectAsStateWithLifecycle(true)
 
     // Load more songs at scroll
     if (NavidromeManager.checkActiveServers() && isSearch == false){
@@ -81,7 +82,7 @@ fun SongsHorizontalColumn(
                 val totalItemsCount = listState.layoutInfo.totalItemsCount
 
                 lastVisibleItemIndex != null && totalItemsCount > 0 &&
-                        (totalItemsCount - lastVisibleItemIndex) <= 10
+                        (totalItemsCount - lastVisibleItemIndex) <= 25
             }
                 .filter { it }
                 .collect {
@@ -94,7 +95,8 @@ fun SongsHorizontalColumn(
     LazyColumn(
         modifier = Modifier
             .wrapContentHeight()
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -155,7 +157,7 @@ fun AlbumGrid(
     val gridState = rememberLazyGridState()
     val coroutineScope = rememberCoroutineScope()
 
-    val showDividers by SettingsManager(LocalContext.current).showProviderDividersFlow.collectAsStateWithLifecycle(true)
+    val showDividers by AppearanceSettingsManager(LocalContext.current).showProviderDividersFlow.collectAsStateWithLifecycle(true)
 
     // Group songs by their source (Local or Navidrome)
     val groupedAlbums = albums.groupBy { song ->
@@ -178,6 +180,104 @@ fun AlbumGrid(
                     viewModel.getMoreAlbums(sort, 50)
                 }
         }
+    }
+
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(128.dp),
+        modifier = Modifier
+            .wrapContentWidth()
+            .fillMaxHeight()
+            .padding(end = 12.dp),
+        state = gridState,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        if (showDividers && groupedAlbums.size > 1) {
+            groupedAlbums.forEach { (groupName, albumsInGroup) ->
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Column (Modifier.padding(start = 12.dp)) {
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .height(1.dp)
+                                .fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+                        )
+                        Text(
+                            text = when (groupName) {
+                                "Navidrome" -> stringResource(R.string.Source_Navidrome)
+                                "Local" -> stringResource(R.string.Source_Local)
+                                else -> ""
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                        )
+                    }
+
+                }
+                itemsIndexed(albumsInGroup) { index, album ->
+                    AlbumCard(album = album,
+                        onClick = {
+                            onAlbumSelected(album.toAlbum())
+                        },
+                        onPlay = {
+                            coroutineScope.launch {
+                                val mediaItems = viewModel.getAlbum(album.mediaMetadata.extras?.getString("navidromeID") ?: "")
+                                if (mediaItems.isNotEmpty())
+                                    SongHelper.play(
+                                        mediaItems = mediaItems.subList(1, mediaItems.size),
+                                        index = 0,
+                                        mediaController = mediaController
+                                    )
+                            }
+                        }
+                    )
+                }
+            }
+        }
+        else {
+            items(
+                items = albums,
+                key = { it.mediaId }
+            ) { album ->
+                AlbumCard(album = album,
+                    onClick = {
+                        onAlbumSelected(album.toAlbum())
+                    },
+                    onPlay = {
+                        coroutineScope.launch {
+                            val mediaItems = viewModel.getAlbum(album.mediaMetadata.extras?.getString("navidromeID") ?: "")
+                            if (mediaItems.isNotEmpty())
+                                SongHelper.play(
+                                    mediaItems = mediaItems.subList(1, mediaItems.size),
+                                    index = 0,
+                                    mediaController = mediaController
+                                )
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@ExperimentalFoundationApi
+@Composable
+fun AlbumGrid(
+    albums: List<MediaItem>,
+    mediaController: MediaController?,
+    onAlbumSelected: (album: MediaData.Album) -> Unit,
+    onGetAlbum: (albumID: String) -> List<MediaItem>
+) {
+    val gridState = rememberLazyGridState()
+    val coroutineScope = rememberCoroutineScope()
+
+    val showDividers by AppearanceSettingsManager(LocalContext.current).showProviderDividersFlow.collectAsStateWithLifecycle(true)
+
+    // Group songs by their source (Local or Navidrome)
+    val groupedAlbums = albums.groupBy { song ->
+        if (song.mediaMetadata.extras?.getString("navidromeID")!!.startsWith("Local_")) "Local" else "Navidrome"
     }
 
     LazyVerticalGrid(
@@ -215,13 +315,12 @@ fun AlbumGrid(
                 }
                 itemsIndexed(albumsInGroup) { index, album ->
                     AlbumCard(album = album,
-                        mediaController = mediaController,
                         onClick = {
                             onAlbumSelected(album.toAlbum())
                         },
                         onPlay = {
                             coroutineScope.launch {
-                                val mediaItems = viewModel.getAlbum(album.mediaMetadata.extras?.getString("navidromeID") ?: "")
+                                val mediaItems = onGetAlbum(album.mediaMetadata.extras?.getString("navidromeID") ?: "")
                                 if (mediaItems.isNotEmpty())
                                     SongHelper.play(
                                         mediaItems = mediaItems.subList(1, mediaItems.size),
@@ -240,13 +339,12 @@ fun AlbumGrid(
                 key = { it.mediaId }
             ) { album ->
                 AlbumCard(album = album,
-                    mediaController = mediaController,
                     onClick = {
                         onAlbumSelected(album.toAlbum())
                     },
                     onPlay = {
                         coroutineScope.launch {
-                            val mediaItems = viewModel.getAlbum(album.mediaMetadata.extras?.getString("navidromeID") ?: "")
+                            val mediaItems = onGetAlbum(album.mediaMetadata.extras?.getString("navidromeID") ?: "")
                             if (mediaItems.isNotEmpty())
                                 SongHelper.play(
                                     mediaItems = mediaItems.subList(1, mediaItems.size),
@@ -265,17 +363,15 @@ fun AlbumGrid(
 @Composable
 fun AlbumRow(
     albums: List<MediaItem>,
-    mediaController: MediaController?,
     onAlbumSelected: (album: MediaData.Album) -> Unit,
     onPlay: (album: MediaItem) -> Unit,
 ){
-    val showProviderDividers by SettingsManager(LocalContext.current).showProviderDividersFlow.collectAsStateWithLifecycle(true)
+    val showProviderDividers by AppearanceSettingsManager(LocalContext.current).showProviderDividersFlow.collectAsStateWithLifecycle(true)
     val dividerIndex = albums.indexOfFirst { it.mediaMetadata.extras?.getString("navidromeID")!!.startsWith("Local_") }
 
     LazyRow(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().heightIn(min = 172.dp),
         contentPadding = PaddingValues(
-            top = 32.dp,
             end = 12.dp
         )
     ) {
@@ -287,7 +383,7 @@ fun AlbumRow(
             if (showProviderDividers) {
                 if (index == dividerIndex && index != albums.lastIndex && index != 0) {
                     Row(
-                        modifier = Modifier.padding(12.dp, 12.dp, 0.dp, 0.dp),
+                        modifier = Modifier.padding(start = 12.dp),
                         verticalAlignment = Alignment.Top,
                         horizontalArrangement = Arrangement.Start
                     ) {
@@ -310,7 +406,6 @@ fun AlbumRow(
 
             AlbumCard(
                 album = album,
-                mediaController = mediaController,
                 onClick = {
                     onAlbumSelected(album.toAlbum())
                 },
@@ -332,7 +427,7 @@ fun ArtistsGrid(
     onArtistSelected: (artist: MediaData.Artist) -> Unit
 ){
     val gridState = rememberLazyGridState()
-    val showProviderDividers by SettingsManager(LocalContext.current).showProviderDividersFlow.collectAsStateWithLifecycle(true)
+    val showProviderDividers by AppearanceSettingsManager(LocalContext.current).showProviderDividersFlow.collectAsStateWithLifecycle(true)
 
     val groupedArtists = artists.groupBy { artist ->
         if (artist.navidromeID.startsWith("Local_")) "Local" else "Navidrome"

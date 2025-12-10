@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="Settings_Header_Appearance">Appearance</string>
+        <string name="Setting_Username">Name</string>
         <string name="Setting_Background">Background Style</string>
         <string name="Setting_Navbar_Items">Navigation Bar Items</string>
+        <string name="Setting_Home_Items">Home Screen Items</string>
         <string name="Setting_MoreInfo">Show More Info</string>
         <string name="Setting_NowPlayingLyricsBlur">Lyrics Blur Effect</string>
         <string name="Setting_NavidromeLogo">Show Navidrome Logo</string>
         <string name="Setting_ProviderDividers">Show Provider Dividers</string>
         <string name="Setting_RefreshAnimation">Show Refresh Animation</string>
         <string name="Setting_LyricsAnimationSpeed">Lyrics Animation Speed</string>
+        <string name="Setting_TrackNumbersAlbum">Show Track Numbers in Album View</string>
     <string name="Settings_Header_Media">Media Providers</string>
     <string name="Settings_Header_Playback">Playback</string>
         <string name="Setting_Transcoding">Max Bitrate</string>

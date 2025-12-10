@@ -7,7 +7,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,7 +22,13 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -51,9 +58,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.MediaItem
 import androidx.media3.session.MediaController
@@ -62,16 +68,24 @@ import androidx.navigation.compose.rememberNavController
 import com.craftworks.music.R
 import com.craftworks.music.data.model.Screen
 import com.craftworks.music.managers.NavidromeManager
-import com.craftworks.music.managers.SettingsManager
+import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.player.SongHelper
 import com.craftworks.music.ui.elements.AlbumRow
 import com.craftworks.music.ui.elements.RippleEffect
 import com.craftworks.music.ui.playing.dpToPx
 import com.craftworks.music.ui.viewmodels.HomeScreenViewModel
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import java.net.URLEncoder
 
-@OptIn(ExperimentalMaterial3Api::class)
+@Stable
+@Serializable
+data class HomeItem(
+    var key: String,
+    var enabled: Boolean = true
+)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HomeScreen(
     navHostController: NavHostController = rememberNavController(),
@@ -96,6 +110,8 @@ fun HomeScreen(
         showRipple++
     }
 
+    val libraries by NavidromeManager.libraries.collectAsStateWithLifecycle()
+
     PullToRefreshBox(
         modifier = Modifier,
         state = state,
@@ -112,22 +128,21 @@ fun HomeScreen(
                         top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
                     )
             ) {
-                Box(Modifier.weight(1f)) {
-                    val username = SettingsManager(context).usernameFlow.collectAsState("Username")
+                Row (Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                    val username = AppearanceSettingsManager(context).usernameFlow.collectAsState("Username")
                     val showNavidromeLogo =
-                        SettingsManager(context).showNavidromeLogoFlow.collectAsState(true).value && NavidromeManager.checkActiveServers()
+                        AppearanceSettingsManager(context).showNavidromeLogoFlow.collectAsState(true).value && NavidromeManager.checkActiveServers()
 
                     if (showNavidromeLogo) NavidromeLogo()
 
                     Text(
                         text = "${stringResource(R.string.welcome_text)},\n${username.value}!",
                         color = MaterialTheme.colorScheme.onBackground,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = MaterialTheme.typography.headlineLarge.fontSize,
-                        modifier = Modifier.padding(
-                            start = if (showNavidromeLogo) 42.dp else 12.dp
-                        ),
-                        lineHeight = MaterialTheme.typography.headlineLarge.lineHeight
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                            .padding(start = 12.dp)
+                            .offset(x = if (showNavidromeLogo) (-36).dp else 0.dp),
                     )
                 }
                 IconButton(
@@ -148,12 +163,98 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            AlbumRow(stringResource(R.string.recently_played), recentlyPlayedAlbums, mediaController, navHostController, viewModel)
-            AlbumRow(stringResource(R.string.recently_added), recentAlbums, mediaController, navHostController, viewModel)
-            AlbumRow(stringResource(R.string.most_played), mostPlayedAlbums, mediaController, navHostController, viewModel)
-            AlbumRow(stringResource(R.string.random_songs), shuffledAlbums, mediaController, navHostController, viewModel)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .horizontalScroll(rememberScrollState())
+            ) {
+                if (libraries.size > 1) {
+                    libraries.forEach { (library, isSelected) ->
+                        FilterChip(
+                            onClick = {
+                                NavidromeManager.currentServerId.value?.let { serverId ->
+                                    NavidromeManager.toggleServerLibraryEnabled(
+                                        serverId,
+                                        library.id,
+                                        !isSelected
+                                    )
+                                }
+                            },
+                            label = {
+                                Text(library.name)
+                            },
+                            selected = isSelected,
+                            leadingIcon = if (isSelected) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Filled.Done,
+                                        contentDescription = "Done icon",
+                                        modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                    )
+                                }
+                            } else {
+                                null
+                            },
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                    }
+                }
+            }
+
+
+            val orderedHomeItems = AppearanceSettingsManager(context).homeItemsItemsFlow.collectAsState(
+                initial = listOf(
+                    HomeItem(
+                        "recently_played",
+                        true
+                    ),
+                    HomeItem(
+                        "recently_added",
+                        true
+                    ),
+                    HomeItem(
+                        "most_played",
+                        true
+                    ),
+                    HomeItem(
+                        "random_songs",
+                        true
+                    )
+                )
+            ).value
+
+            orderedHomeItems.forEach { item ->
+                if (item.enabled) {
+                    val albums = when (item.key) {
+                        "recently_played" -> recentlyPlayedAlbums
+                        "recently_added" -> recentAlbums
+                        "most_played" -> mostPlayedAlbums
+                        "random_songs" -> shuffledAlbums
+                        else -> emptyList()
+                    }
+
+                    val titleMap = remember {
+                        mapOf(
+                            "recently_played" to R.string.recently_played,
+                            "recently_added" to R.string.recently_added,
+                            "most_played" to R.string.most_played,
+                            "random_songs" to R.string.random_songs
+                        )
+                    }
+
+                    AlbumRow(
+                        item.key,
+                        titleMap[item.key],
+                        albums,
+                        mediaController,
+                        navHostController,
+                        viewModel
+                    )
+                }
+            }
         }
     }
 
@@ -174,7 +275,6 @@ fun HomeScreen(
         ),
         label = "Navidrome Logo Rotate"
     )
-    val offsetX = dpToPx(-36)
     val clickAction = rememberUpdatedState {
         rotation += 180f
     }
@@ -189,8 +289,8 @@ fun HomeScreen(
         painter = painterResource(R.drawable.s_m_navidrome),
         contentDescription = "Navidrome Icon",
         modifier = Modifier
-            .size(72.dp)
-            .offset { IntOffset(offsetX, 0) }
+            .size(76.dp)
+            .offset(x = (-36).dp)
             .shadow(24.dp, CircleShape)
             .graphicsLayer {
                 rotationZ = animatedRotation
@@ -201,29 +301,51 @@ fun HomeScreen(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable fun AlbumRow(
-    title: String,
+    key: String,
+    title: Int?,
     albums: List<MediaItem>,
     mediaController: MediaController?,
     navHostController: NavHostController,
     viewModel: HomeScreenViewModel
 ) {
     val coroutineScope = rememberCoroutineScope()
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(256.dp)
+            .padding(bottom = 6.dp)
     ) {
-        Text(
-            text = title,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = MaterialTheme.typography.headlineSmall.fontSize,
-            modifier = Modifier.padding(start = 12.dp)
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    navHostController.navigate(Screen.HomeLists.route + "/$key") {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+                .padding(horizontal = 12.dp, vertical = 12.dp)
+        ) {
+            Text(
+                text = stringResource(title ?: androidx.media3.session.R.string.error_message_fallback),
+                color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = MaterialTheme.typography.headlineSmall.fontSize
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier
+                    .size(MaterialTheme.typography.headlineSmall.fontSize.value.dp * 1.2f)
+            )
+        }
 
         AlbumRow(
             albums,
-            mediaController,
             onAlbumSelected = { album ->
                 val encodedImage = URLEncoder.encode(album.coverArt, "UTF-8")
                 navHostController.navigate(Screen.AlbumDetails.route + "/${album.navidromeID}/$encodedImage") {
