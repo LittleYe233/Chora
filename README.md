@@ -6,6 +6,8 @@ A simple and light-weight app that streams music from a Subsonic or Navidrome se
 
 <a href='https://play.google.com/store/apps/details?id=com.craftworks.music&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img width=256px alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'/></a>
 
+**NOTE:** This is a forked branch of the upstream from [CraftWorksMC](https://github.com/CraftWorksMC/Chora). I will pull and **rebase** from upstream sometimes to keep updated and add my personal modification. Here **rebase** means that the commit log may alter after a manual merge from upstream.
+
 ## Features
 
 - Subsonic/Navidrome support.
@@ -19,11 +21,16 @@ A simple and light-weight app that streams music from a Subsonic or Navidrome se
 - Multiple Navidrome libraries.
 - Transcoding.
 
+## W.I.P
+
+**This section fits with this branch instead of upstream.**
+
+- Desktop lyrics.
+- Other small fixes.
+
 ## Roadmap
 
-- Chromecast
-- Local DB for local files and Navidrome offline mode.
-- Jellyfin (Music) Support.
+**This section fits with this branch instead of upstream.**
 
 ## Known Issues
 
@@ -52,10 +59,6 @@ A simple and light-weight app that streams music from a Subsonic or Navidrome se
     <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TV/TvRadioScreen.png?raw=true" width=400>
     <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TV/TvPlaylistScreen.png?raw=true" width=400>
 </p>
-
-## Help translate!
-
-Help translate on <a href="https://crowdin.com/project/chora">Crowdin</a>
 
 ## Support the project
 
