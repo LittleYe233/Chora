@@ -6,6 +6,8 @@ A simple and light-weight app that streams music from a Subsonic or Navidrome se
 
 <a href='https://play.google.com/store/apps/details?id=com.craftworks.music&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img width=256px alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'/></a>
 
+**NOTE:** This is a forked branch of the upstream from [CraftWorksMC](https://github.com/CraftWorksMC/Chora). I will pull and merge from upstream sometimes to keep updated and add my personal modification.
+
 ## Features
 
 - Subsonic/Navidrome support.
@@ -19,14 +21,15 @@ A simple and light-weight app that streams music from a Subsonic or Navidrome se
 
 ## W.I.P
 
-- Refactoring, Material 3 Expressive UI.
-- Local DB for local files and Navidrome offline mode.
-- Navidrome multi library support.
+**This section fits with this branch instead of upstream.**
+
+- Desktop lyrics.
+- Multiline lyrics (with translation, punctuation, etc.).
+- Other small fixes.
 
 ## Roadmap
 
-- Jellyfin (Music) Support.
-- Chromecast
+**This section fits with this branch instead of upstream.**
 
 ## Known Issues
 
