@@ -214,7 +214,7 @@ fun NowPlayingPortrait(
         }
 
         if (metadata?.mediaType != MediaMetadata.MEDIA_TYPE_RADIO_STATION)
-            PlaybackProgressSlider(iconTextColor, mediaController)
+            PlaybackProgressSlider(iconTextColor, mediaController, metadata)
 
         //region Buttons
         Column(

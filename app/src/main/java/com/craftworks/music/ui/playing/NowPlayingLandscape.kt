@@ -175,7 +175,7 @@ fun NowPlayingLandscape(
                 Spacer(Modifier.height(48.dp))
             }
             else {
-                PlaybackProgressSlider(iconTextColor, mediaController)
+                PlaybackProgressSlider(iconTextColor, mediaController, metadata)
             }
 
             Row(

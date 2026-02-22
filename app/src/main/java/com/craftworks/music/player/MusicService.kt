@@ -56,6 +56,10 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.math.pow
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.exoplayer.upstream.LoadErrorHandlingPolicy
+import androidx.media3.exoplayer.drm.DrmSessionManagerProvider
 
 /*
     Thanks to Yurowitz on StackOverflow for this! Used it as a template.
@@ -197,6 +201,33 @@ class ChoraMediaLibraryService : MediaLibraryService() {
 
     @OptIn(UnstableApi::class)
     fun initializePlayer() {
+        val mediaSourceFactory = object : MediaSource.Factory {
+            private val defaultFactory = DefaultMediaSourceFactory(this@ChoraMediaLibraryService)
+
+            override fun setDrmSessionManagerProvider(drmSessionManagerProvider: DrmSessionManagerProvider): MediaSource.Factory {
+                defaultFactory.setDrmSessionManagerProvider(drmSessionManagerProvider)
+                return this
+            }
+
+            override fun setLoadErrorHandlingPolicy(loadErrorHandlingPolicy: LoadErrorHandlingPolicy): MediaSource.Factory {
+                defaultFactory.setLoadErrorHandlingPolicy(loadErrorHandlingPolicy)
+                return this
+            }
+
+            override fun getSupportedTypes(): IntArray {
+                return defaultFactory.supportedTypes
+            }
+
+            override fun createMediaSource(mediaItem: MediaItem): MediaSource {
+                val source = defaultFactory.createMediaSource(mediaItem)
+                val durationSec = mediaItem.mediaMetadata.extras?.getInt("duration") ?: 0
+                return if (durationSec > 0) {
+                    DurationForcingMediaSource(source, durationSec * 1000000L)
+                } else {
+                    source
+                }
+            }
+        }
 
         serviceIOScope.launch {
             appearanceSettingsManager.bottomNavItemsFlow.collect { items ->
@@ -218,6 +249,7 @@ class ChoraMediaLibraryService : MediaLibraryService() {
         }
 
         player = ExoPlayer.Builder(this)
+            .setMediaSourceFactory(mediaSourceFactory)
             .setSeekParameters(SeekParameters.EXACT)
             .setWakeMode(
                 if (NavidromeManager.checkActiveServers())
@@ -382,6 +414,8 @@ class ChoraMediaLibraryService : MediaLibraryService() {
 
             val result = MediaItemsWithStartPosition(
                 currentTracklist.map { mediaItem ->
+                    // val duration = mediaItem.mediaMetadata.extras?.getInt("duration") ?: 0
+                    // Log.d("FIXDEBUG", "MediaItem: Duration: $duration")
                     MediaItem.Builder()
                         .setMediaId(mediaItem.mediaId)
                         .setMediaMetadata(mediaItem.mediaMetadata)
