@@ -95,19 +95,15 @@ fun SetupNavGraph(
         modifier = Modifier.padding(bottom = bottomPadding, start = leftPadding),
         enterTransition = {
             fadeIn(animationSpec)
-            //scaleIn(tween(300), 0.95f) + fadeIn(tween(400))
         },
         exitTransition = {
             fadeOut(animationSpec)
-            //fadeOut(tween(300))
         },
         popEnterTransition = {
             fadeIn(animationSpec)
-            //scaleIn(tween(300), 1.05f) + fadeIn(tween(400))
         },
         popExitTransition = {
             fadeOut(animationSpec)
-            //scaleOut(tween(300), 0.95f) + fadeOut(tween(400))
         },
         route = "main_graph"
     ) {
@@ -228,8 +224,7 @@ fun SetupNavGraph(
 
         //Settings
         navigation(startDestination = Screen.Setting.route, route = "settings_graph") {
-            composable(
-                route = Screen.Setting.route,) {
+            composable(route = Screen.Setting.route) {
                 SettingScreen(navController)
             }
             composable(

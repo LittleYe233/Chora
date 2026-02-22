@@ -3,20 +3,24 @@ package com.craftworks.music.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
+import com.craftworks.music.data.model.SortOrder
 import com.craftworks.music.data.repository.AlbumRepository
 import com.craftworks.music.managers.DataRefreshManager
+import com.craftworks.music.managers.settings.LocalDataSettingsManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class AlbumScreenViewModel @Inject constructor(
-    private val albumRepository: AlbumRepository
+    private val albumRepository: AlbumRepository,
+    private val localDataSettingsManager: LocalDataSettingsManager
 ) : ViewModel() {
 
     private val _allAlbums = MutableStateFlow<List<MediaItem>>(emptyList())
@@ -28,10 +32,23 @@ class AlbumScreenViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _sortOrder = MutableStateFlow(SortOrder.ALPHABETICAL)
+    val sortOrder: StateFlow<SortOrder> = _sortOrder.asStateFlow()
+
     init {
-        getAlbums()
+        viewModelScope.launch {
+            localDataSettingsManager.sortAlbumOrder.collect { sortOrder ->
+                if (_sortOrder.value != sortOrder) {
+                    _sortOrder.value = sortOrder
+                    getAlbums() // Refresh albums if the sort order changes
+                }
+            }
+        }
 
         viewModelScope.launch {
+            _sortOrder.value = localDataSettingsManager.sortAlbumOrder.first()
+            getAlbums()
+
             DataRefreshManager.dataSourceChangedEvent.collect {
                 getAlbums()
             }
@@ -39,10 +56,12 @@ class AlbumScreenViewModel @Inject constructor(
     }
 
     fun getAlbums() {
+        _allAlbums.value = emptyList()
+
         viewModelScope.launch {
             _isLoading.value = true
             coroutineScope {
-                val allAlbumsDeferred = async { albumRepository.getAlbums("alphabeticalByName", 20, 0, true) }
+                val allAlbumsDeferred = async { albumRepository.getAlbums(_sortOrder.value.key, 20, 0, true) }
 
                 _allAlbums.value = allAlbumsDeferred.await().sortedByDescending {
                     it.mediaMetadata.extras?.getString("navidromeID")!!.startsWith("Local_")
@@ -56,11 +75,11 @@ class AlbumScreenViewModel @Inject constructor(
         return albumRepository.getAlbum(id) ?: emptyList()
     }
 
-    fun getMoreAlbums(sort: String? = "alphabeticalByName" , size: Int){
+    fun getMoreAlbums(size: Int){
         viewModelScope.launch {
             coroutineScope {
                 val albumOffset = _allAlbums.value.size
-                val newAlbums = albumRepository.getAlbums(sort, size, albumOffset)
+                val newAlbums = albumRepository.getAlbums(_sortOrder.value.key, size, albumOffset)
                 _allAlbums.value += newAlbums
             }
         }
@@ -77,6 +96,12 @@ class AlbumScreenViewModel @Inject constructor(
                 _searchResults.value = albumRepository.searchAlbum(query)
             }
             _isLoading.value = false
+        }
+    }
+
+    fun setSorting(newSortOrder: SortOrder) {
+        viewModelScope.launch {
+            localDataSettingsManager.saveSortAlbumOrder(newSortOrder)
         }
     }
 }

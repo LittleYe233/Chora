@@ -73,6 +73,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import androidx.media3.common.util.NotificationUtil.IMPORTANCE_LOW
+import androidx.media3.common.util.NotificationUtil.createNotificationChannel
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -297,6 +299,14 @@ class MainActivity : ComponentActivity() {
             )
         }
 
+        createNotificationChannel(
+            this,
+            "download_channel",
+            R.string.Notification_Download_Name,
+            R.string.Notification_Download_Desc,
+            IMPORTANCE_LOW
+        )
+
         // SAVE SETTINGS ON APP EXIT
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
@@ -335,15 +345,15 @@ fun AnimatedBottomNavBar(
             BottomNavItem(
                 "Home", R.drawable.rounded_home_24, "home_screen"
             ), BottomNavItem(
-                "Albums", R.drawable.rounded_library_music_24, "album_screen"
+                stringResource(R.string.Albums), R.drawable.rounded_library_music_24, "album_screen"
             ), BottomNavItem(
-                "Songs", R.drawable.round_music_note_24, "songs_screen"
+                stringResource(R.string.songs), R.drawable.round_music_note_24, "songs_screen"
             ), BottomNavItem(
-                "Artists", R.drawable.rounded_artist_24, "artists_screen"
+                stringResource(R.string.Artists), R.drawable.rounded_artist_24, "artists_screen"
             ), BottomNavItem(
-                "Radios", R.drawable.rounded_radio, "radio_screen"
+                stringResource(R.string.radios), R.drawable.rounded_radio, "radio_screen"
             ), BottomNavItem(
-                "Playlists", R.drawable.placeholder, "playlist_screen"
+                stringResource(R.string.playlists), R.drawable.placeholder, "playlist_screen"
             )
         )
     ).value

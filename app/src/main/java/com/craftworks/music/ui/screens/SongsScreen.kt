@@ -12,12 +12,12 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -31,12 +31,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
@@ -77,30 +78,34 @@ fun SongsScreen(
         showRipple++
     }
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
     PullToRefreshBox(
         state = state,
         isRefreshing = isRefreshing,
         onRefresh = onRefresh
     ) {
         Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 TopBarWithSearch(
-                    headerIcon = ImageVector.vectorResource(R.drawable.round_music_note_24),
                     headerText = stringResource(R.string.songs),
+                    scrollBehavior = scrollBehavior,
                     onSearch = { query -> viewModel.search(query) },
-                ) {
-                    SongsHorizontalColumn(
-                        songList = searchResults,
-                        onSongSelected = { songs, index ->
-                            println("Starting song at index: $index")
-                            coroutineScope.launch {
-                                SongHelper.play(songs, index, mediaController)
-                            }
-                        },
-                        isSearch = true,
-                        viewModel = viewModel
-                    )
-                }
+                    searchResults = {
+                        SongsHorizontalColumn(
+                            songList = searchResults,
+                            onSongSelected = { songs, index ->
+                                println("Starting song at index: $index")
+                                coroutineScope.launch {
+                                    SongHelper.play(songs, index, mediaController)
+                                }
+                            },
+                            isSearch = true,
+                            viewModel = viewModel
+                        )
+                    }
+                )
             },
         ) { innerPadding ->
             Column(
