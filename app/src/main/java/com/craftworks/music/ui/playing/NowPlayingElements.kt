@@ -85,9 +85,10 @@ fun PlaybackProgressSlider(
     metadata: MediaMetadata? = null
 ) {
     var currentValue by remember { mutableLongStateOf(0L) }
-    val currentDuration by remember(mediaController?.duration) {
+    val currentDuration by remember(mediaController?.duration, metadata?.durationMs) {
         derivedStateOf {
-            mediaController?.duration?.coerceAtLeast(0L)
+            val duration = mediaController?.duration?.coerceAtLeast(0L) ?: 0L
+            if (duration > 0L) duration else (metadata?.durationMs ?: 0L)
         }
     }
 
@@ -189,7 +190,7 @@ fun PlaybackProgressSlider(
                 isInteracting = false
                 mediaController?.seekTo(currentValue)
             },
-            valueRange = 0f..(currentDuration?.toFloat() ?: 0f),
+            valueRange = 0f..(currentDuration.toFloat()),
             colors = SliderDefaults.colors(
                 activeTrackColor = color,
                 inactiveTrackColor = color.copy(alpha = 0.25f),
@@ -215,7 +216,7 @@ fun PlaybackProgressSlider(
                 maxLines = 1
             )
             Text(
-                text = remember(currentDuration) { formatMilliseconds(currentDuration?.toInt()?.div(1000) ?: (currentValue/1000).toInt()) },
+                text = remember(currentDuration) { formatMilliseconds(currentDuration.toInt() / 1000) },
                 fontWeight = FontWeight.Light,
                 textAlign = TextAlign.End,
                 color = color.copy(alpha = 0.5f),
