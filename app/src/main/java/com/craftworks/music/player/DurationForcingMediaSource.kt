@@ -1,6 +1,5 @@
 package com.craftworks.music.player
 
-import android.util.Log
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Timeline
 import androidx.media3.datasource.TransferListener
@@ -9,14 +8,27 @@ import androidx.media3.exoplayer.source.ForwardingTimeline
 import androidx.media3.exoplayer.source.MediaPeriod
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.upstream.Allocator
+import androidx.media3.common.util.UnstableApi
 
+@UnstableApi
 class DurationForcingMediaSource(
     private val mediaSource: MediaSource,
-    private val forcedDurationUs: Long
+    private var forcedDurationUs: Long,
+    private val onRelease: () -> Unit = {}
 ) : CompositeMediaSource<Void?>() {
 
-    init {
-        Log.d("DurationForcing", "Initialized for media ${mediaSource.mediaItem.mediaId} with duration $forcedDurationUs")
+    private var lastTimeline: Timeline? = null
+
+    /**
+     * Updates the forced duration and refreshes the source info if a timeline is available.
+     */
+    fun updateDuration(newDurationUs: Long) {
+        this.forcedDurationUs = newDurationUs
+        
+        lastTimeline?.let { timeline ->
+            // Re-process the last known timeline with the new duration
+            onChildSourceInfoRefreshed(null, mediaSource, timeline)
+        }
     }
 
     override fun getMediaItem(): MediaItem {
@@ -33,29 +45,29 @@ class DurationForcingMediaSource(
         mediaSource: MediaSource,
         newTimeline: Timeline
     ) {
-        Log.d("DurationForcing", "Refreshed timeline for ${mediaSource.mediaItem.mediaId}")
+        lastTimeline = newTimeline
+
         val forwardedTimeline = object : ForwardingTimeline(newTimeline) {
             override fun getWindow(
                 windowIndex: Int,
-                window: Timeline.Window,
+                window: Window,
                 defaultPositionProjectionUs: Long
-            ): Timeline.Window {
+            ): Window {
                 val originalWindow = super.getWindow(windowIndex, window, defaultPositionProjectionUs)
-                Log.d("DurationForcing", "Forcing duration: $forcedDurationUs (was ${originalWindow.durationUs})")
+
                 originalWindow.durationUs = forcedDurationUs
                 originalWindow.isDynamic = false
                 originalWindow.isSeekable = true
+
                 // In Media3, isLive() is derived from liveConfiguration != null.
                 // To set isLive = false, we must clear the liveConfiguration.
                 if (originalWindow.liveConfiguration != null) {
-                    // Create a non-live configuration if needed, or null to indicate not live.
-                    // Setting it to null makes isLive() return false.
                     originalWindow.liveConfiguration = null
                 }
                 return originalWindow
             }
 
-            override fun getPeriod(periodIndex: Int, period: Timeline.Period, setIds: Boolean): Timeline.Period {
+            override fun getPeriod(periodIndex: Int, period: Period, setIds: Boolean): Period {
                 val originalPeriod = super.getPeriod(periodIndex, period, setIds)
                 originalPeriod.durationUs = forcedDurationUs
                 return originalPeriod
@@ -74,5 +86,10 @@ class DurationForcingMediaSource(
 
     override fun releasePeriod(mediaPeriod: MediaPeriod) {
         mediaSource.releasePeriod(mediaPeriod)
+    }
+
+    override fun releaseSourceInternal() {
+        super.releaseSourceInternal()
+        onRelease()
     }
 }

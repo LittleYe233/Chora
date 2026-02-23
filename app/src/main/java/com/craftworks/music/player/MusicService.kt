@@ -5,6 +5,8 @@ import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.ui.util.fastFilter
@@ -17,6 +19,11 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DataSpec
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.HttpDataSource
+import androidx.media3.datasource.TransferListener
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.session.LibraryResult
@@ -182,6 +189,38 @@ class ChoraMediaLibraryService : MediaLibraryService() {
 
     var aFolderSongs = mutableListOf<MediaItem>()
 
+    //region TransferListener
+    private val activeDurationSources = java.util.concurrent.ConcurrentHashMap<String, DurationForcingMediaSource>()
+
+    private val transferListener = object : TransferListener {
+        override fun onTransferInitializing(source: DataSource, dataSpec: DataSpec, isNetwork: Boolean) {}
+
+        override fun onTransferStart(source: DataSource, dataSpec: DataSpec, isNetwork: Boolean) {
+            if (source is HttpDataSource) {
+                val headers = source.responseHeaders
+                val durationHeader = headers["x-content-duration"]?.firstOrNull()
+
+                if (durationHeader != null) {
+                    try {
+                        val durationSec = durationHeader.toFloat()
+                        val durationUs = (durationSec * 1_000_000).toLong()
+                        val uri = dataSpec.uri.toString()
+
+                        activeDurationSources[uri]?.let { mediaSource ->
+                            Handler(Looper.getMainLooper()).post {
+                                mediaSource.updateDuration(durationUs)
+                            }
+                        }
+                    } catch (e: NumberFormatException) {
+                        Log.e("TransferListener", "Invalid duration header: $durationHeader. Exception: $e")
+                    }
+                }
+            }
+        }
+
+        override fun onBytesTransferred(source: DataSource, dataSpec: DataSpec, isNetwork: Boolean, bytesTransferred: Int) {}
+        override fun onTransferEnd(source: DataSource, dataSpec: DataSpec, isNetwork: Boolean) {}
+    }
     //endregion
 
     @OptIn(UnstableApi::class)
@@ -201,7 +240,10 @@ class ChoraMediaLibraryService : MediaLibraryService() {
     @OptIn(UnstableApi::class)
     fun initializePlayer() {
         val mediaSourceFactory = object : MediaSource.Factory {
+            private val dataSourceFactory = DefaultDataSource.Factory(this@ChoraMediaLibraryService)
+                .setTransferListener(transferListener)
             private val defaultFactory = DefaultMediaSourceFactory(this@ChoraMediaLibraryService)
+                .setDataSourceFactory(dataSourceFactory)
 
             override fun setDrmSessionManagerProvider(drmSessionManagerProvider: DrmSessionManagerProvider): MediaSource.Factory {
                 defaultFactory.setDrmSessionManagerProvider(drmSessionManagerProvider)
@@ -221,7 +263,16 @@ class ChoraMediaLibraryService : MediaLibraryService() {
                 val source = defaultFactory.createMediaSource(mediaItem)
                 val durationSec = mediaItem.mediaMetadata.extras?.getInt("duration") ?: 0
                 return if (durationSec > 0) {
-                    DurationForcingMediaSource(source, durationSec * 1000000L)
+                    val uri = mediaItem.localConfiguration?.uri.toString()
+                    val forcingSource = DurationForcingMediaSource(
+                        source,
+                        durationSec * 1000000L,
+                        onRelease = {
+                            activeDurationSources.remove(uri)
+                        }
+                    )
+                    activeDurationSources[uri] = forcingSource
+                    forcingSource
                 } else {
                     source
                 }
@@ -244,7 +295,7 @@ class ChoraMediaLibraryService : MediaLibraryService() {
         player.repeatMode = Player.REPEAT_MODE_OFF
         player.shuffleModeEnabled = false
 
-        var playerScrobbled: Boolean = false
+        var playerScrobbled = false
 
         player.addListener(object : Player.Listener {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -258,7 +309,7 @@ class ChoraMediaLibraryService : MediaLibraryService() {
                     Log.d("REPLAY GAIN", "Setting ReplayGain to ${player.volume}")
                 }
 
-                playerScrobbled = false;
+                playerScrobbled = false
 
                 super.onMediaItemTransition(mediaItem, reason)
 
@@ -367,7 +418,7 @@ class ChoraMediaLibraryService : MediaLibraryService() {
             val networkCapabilities =
                 connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
 
-            val bitrate: String? = runBlocking {
+            val bitrate: String = runBlocking {
                 when {
                     networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true -> {
                         Log.d("NetworkCheck", "Device is on Wi-Fi")
@@ -384,7 +435,7 @@ class ChoraMediaLibraryService : MediaLibraryService() {
                 }
             }
 
-            val bitrateOptions = if (bitrate != null && bitrate != "No Transcoding" && bitrate.isNotEmpty()) {
+            val bitrateOptions = if (bitrate != "No Transcoding" && bitrate.isNotEmpty()) {
                 runBlocking {
                     "&maxBitRate=$bitrate&format=${playbackSettingsManager.transcodingFormatFlow.first()}"
                 }
@@ -394,8 +445,8 @@ class ChoraMediaLibraryService : MediaLibraryService() {
 
             val result = MediaItemsWithStartPosition(
                 currentTracklist.map { mediaItem ->
-                    val duration = mediaItem.mediaMetadata.extras?.getInt("duration") ?: 0
-                    Log.d("FIXDEBUG", "MediaItem: Duration: $duration")
+//                    val duration = mediaItem.mediaMetadata.extras?.getInt("duration") ?: 0
+//                    Log.d("LibrarySessionCallback", "MediaItem: Duration: $duration")
                     MediaItem.Builder()
                         .setMediaId(mediaItem.mediaId)
                         .setMediaMetadata(mediaItem.mediaMetadata)
