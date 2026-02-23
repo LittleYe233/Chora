@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -15,12 +17,42 @@ android {
         generateLocaleConfig = true
     }
 
+    // START signingConfigs
+    val properties = Properties()
+    val propertiesFile: File? = rootProject.file("local.properties")
+    if (propertiesFile != null && propertiesFile.exists()) {
+        properties.load(propertiesFile.inputStream())
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("key.jks")
+            storePassword = properties.getProperty("RELEASE_STORE_PASSWORD")
+            keyAlias = "key0"
+            keyPassword = properties.getProperty("RELEASE_KEY_PASSWORD")
+        }
+    }
+    // END signingConfigs
+
+    // START build config
+    // A hack to determine if it is a release build
+    val isReleaseTask = gradle.startParameter.taskNames.any { it.contains("release", ignoreCase = true) }
+    val baseVersionName = "1.28.0"
+    val baseVersionCode = 280
+    val patchVersionCode = 1
+
     defaultConfig {
         applicationId = "com.craftworks.music"
         minSdk = 23
         targetSdk = 36
-        versionCode = 280
-        versionName = "1.28.0"
+        versionCode = if (isReleaseTask) {
+            // x.y.z -> xyz000 + patch
+            (baseVersionCode * 1000) + patchVersionCode
+        } else {
+            // x.y.z -> xyz
+            baseVersionCode
+        }
+        versionName = baseVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -36,7 +68,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
         debug {
             isDebuggable = false
@@ -45,6 +77,8 @@ android {
             resValue("string", "app_name", "Chora Debug")
         }
     }
+    // END build config
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
