@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("com.google.devtools.ksp")
@@ -14,12 +16,42 @@ android {
         generateLocaleConfig = true
     }
 
+    // START signingConfigs
+    val properties = Properties()
+    val propertiesFile: File? = rootProject.file("local.properties")
+    if (propertiesFile != null && propertiesFile.exists()) {
+        properties.load(propertiesFile.inputStream())
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("key.jks")
+            storePassword = properties.getProperty("RELEASE_STORE_PASSWORD")
+            keyAlias = "key0"
+            keyPassword = properties.getProperty("RELEASE_KEY_PASSWORD")
+        }
+    }
+    // END signingConfigs
+
+    // START build config
+    // A hack to determine if it is a release build
+    val isReleaseTask = gradle.startParameter.taskNames.any { it.contains("release", ignoreCase = true) }
+    val baseVersionName = "1.31.1"
+    val baseVersionCode = 311
+    val patchVersionCode = 0
+
     defaultConfig {
         applicationId = "com.craftworks.music"
         minSdk = 23
         targetSdk = 37
-        versionCode = 311
-        versionName = "1.31.1"
+        versionCode = if (isReleaseTask) {
+            // x.y.z -> xyz000 + patch
+            (baseVersionCode * 1000) + patchVersionCode
+        } else {
+            // x.y.z -> xyz
+            baseVersionCode
+        }
+        versionName = baseVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -35,7 +67,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
         debug {
             isDebuggable = false
@@ -44,6 +76,8 @@ android {
             resValue("string", "app_name", "Chora Debug")
         }
     }
+    // END build config
+
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
 
