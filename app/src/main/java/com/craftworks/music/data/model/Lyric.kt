@@ -8,8 +8,19 @@ import kotlinx.serialization.Serializable
 @Stable
 data class Lyric(
     val timestamp: Int,
-    val content: String
+    val content: List<String>,
 )
+
+fun List<Lyric>.groupLyrics(): List<Lyric> {
+    return this.groupBy { it.timestamp }
+        .map { (timestamp, lyrics) ->
+            Lyric(
+                timestamp = timestamp,
+                content = lyrics.flatMap { it.content }
+            )
+        }
+        .sortedBy { it.timestamp }
+}
 
 
 // LRCLIB Lyrics
@@ -26,7 +37,7 @@ data class LrcLibLyrics(
 fun MediaData.PlainLyrics.toLyric(): Lyric {
     return Lyric(
         timestamp = -1,
-        content = value
+        content = if (value.isBlank()) emptyList() else listOf(value)
     )
 }
 
@@ -35,7 +46,7 @@ fun MediaData.StructuredLyrics.toLyrics(): List<Lyric> {
         Lyric(
             // If not synced lyrics, set timestamp to -1
             timestamp = if (synced) syncedLyric.start + (offset ?: 0) else -1,
-            content = syncedLyric.value
+            content = listOf(syncedLyric.value)
         )
     }
 }
@@ -47,19 +58,24 @@ fun LrcLibLyrics.toLyrics(): List<Lyric> {
         val result = mutableListOf<Lyric>()
 
         syncedLyrics?.lines()?.forEach { lyric ->
-            val timeStampsRaw = getTimeStamps(lyric)[0]
-            val time = mmssToMilliseconds(timeStampsRaw)
-            val lyricText: String = lyric.drop(10).trim()
+            val timeStampsRaw = getTimeStamps(lyric)
+            val lyricText: String = lyric.replace(Regex("\\[(.*?)]"), "").trim()
 
-            result.add(Lyric(time.toInt(), lyricText))
+            timeStampsRaw.forEach { timestamp ->
+                val time = mmssToMilliseconds(timestamp)
+                result.add(Lyric(time.toInt(), listOf(lyricText)))
+            }
         }
+        
+        // Sort by timestamp to handle multiple timestamps per line correctly
+        result.sortBy { it.timestamp }
 
         Log.d("LYRICS", "Got LRCLIB synced lyrics: $result")
         return result
     }
     else if (plainLyrics.toString() != "null") {
         Log.d("LYRICS", "Got LRCLIB plain lyrics: $plainLyrics")
-        return listOf(Lyric(-1, plainLyrics.toString()))
+        return listOf(Lyric(-1, listOf(plainLyrics.toString())))
     }
     else
         return listOf()

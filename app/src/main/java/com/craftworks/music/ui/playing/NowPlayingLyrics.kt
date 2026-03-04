@@ -17,6 +17,7 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -232,7 +233,7 @@ fun LyricsView(
                 if (lyrics.size > 1) {
                     itemsIndexed(
                         lyrics,
-                        key = { index, lyric -> "${index}:${lyric.content}" }
+                        key = { index, lyric -> "${index}:${lyric.timestamp}" }
                     ) { index, lyric ->
                         SyncedLyricItem(
                             lyric = lyric,
@@ -252,7 +253,7 @@ fun LyricsView(
                 else if (lyrics.isNotEmpty()) {
                     item {
                         Text(
-                            text = lyrics[0].content,
+                            text = lyrics[0].content.joinToString("\n"),
                             style = MaterialTheme.typography.headlineMedium,
                             color = color,
                             modifier = Modifier
@@ -298,7 +299,7 @@ fun SyncedLyricItem(
         animationSpec = tween(lyricsAnimationSpeed, 0, FastOutSlowInEasing)
     )
 
-    if (lyric.content == "") {
+    if (lyric.content.isEmpty() || (lyric.content.size == 1 && lyric.content[0].isBlank())) {
         AnimatedContent(
             targetState = currentLyricIndex == index
         ) {
@@ -330,15 +331,22 @@ fun SyncedLyricItem(
                 onClick()
             }, contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = lyric.content,
-                style = MaterialTheme.typography.titleLarge,
-                //fontWeight = FontWeight.Bold,
-                color = color.copy(lyricAlpha),
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                //lineHeight = 32.sp
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                lyric.content.forEach { line ->
+                    Text(
+                        text = line,
+                        style = MaterialTheme.typography.titleLarge,
+                        //fontWeight = FontWeight.Bold,
+                        color = color.copy(lyricAlpha),
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        //lineHeight = 32.sp
+                    )
+                }
+            }
         }
     }
 }

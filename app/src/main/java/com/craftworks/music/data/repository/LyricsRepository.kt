@@ -8,6 +8,7 @@ import androidx.media3.common.MediaMetadata
 import com.craftworks.music.data.datasource.lrclib.LrclibDataSource
 import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
 import com.craftworks.music.data.model.Lyric
+import com.craftworks.music.data.model.groupLyrics
 import com.craftworks.music.managers.NavidromeManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
@@ -46,7 +47,7 @@ class LyricsRepository @Inject constructor(
                     foundNavidromePlainLyrics = true
                 else {
                     Log.d("LYRICS", "Got Navidrome synced lyrics.")
-                    LyricsState.lyrics.value = it
+                    LyricsState.lyrics.value = it.groupLyrics()
                     LyricsState.loading.value = false;
                     return
                 }
@@ -65,7 +66,7 @@ class LyricsRepository @Inject constructor(
             if (foundNavidromePlainLyrics) {
                 Log.d("LYRICS", "Got Navidrome plain lyrics, trying LRCLIB.")
                 lrclibDataSource.getLrcLibLyrics(metadata).takeIf { it.isNotEmpty() }?.let {
-                    if (it.size != 1) LyricsState.lyrics.value = it
+                    if (it.size != 1) LyricsState.lyrics.value = it.groupLyrics()
                     LyricsState.loading.value = false;
                     return
                 }
@@ -73,7 +74,7 @@ class LyricsRepository @Inject constructor(
 
             lrclibDataSource.getLrcLibLyrics(metadata).takeIf { it.isNotEmpty() }?.let {
                 Log.d("LYRICS", "Got LRCLIB lyrics.")
-                LyricsState.lyrics.value = it
+                LyricsState.lyrics.value = it.groupLyrics()
                 LyricsState.loading.value = false;
                 return
             }
