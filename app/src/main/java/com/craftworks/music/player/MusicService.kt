@@ -35,6 +35,7 @@ import com.craftworks.music.data.repository.PlaylistRepository
 import com.craftworks.music.data.repository.RadioRepository
 import com.craftworks.music.data.repository.SongRepository
 import com.craftworks.music.managers.NavidromeManager
+import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.managers.settings.LocalDataSettingsManager
 import com.craftworks.music.managers.settings.PlaybackSettingsManager
 import com.google.common.collect.ImmutableList
@@ -70,6 +71,7 @@ class ChoraMediaLibraryService : MediaLibraryService() {
 
     private var scrobbleJob: Job? = null
 
+    @Inject lateinit var appearanceSettingsManager: AppearanceSettingsManager
     @Inject lateinit var playbackSettingsManager: PlaybackSettingsManager
 
     @Inject lateinit var albumRepository: AlbumRepository
@@ -164,7 +166,7 @@ class ChoraMediaLibraryService : MediaLibraryService() {
         )
         .build()
 
-    private val rootHierarchy = listOf(homeItem, albumsItem, artistsItem, radiosItem, playlistsItem)
+    private var rootHierarchy = mutableListOf<MediaItem>()
 
     private val serviceMainScope = CoroutineScope(Dispatchers.Main)
     private val serviceIOScope = CoroutineScope(Dispatchers.IO)
@@ -195,6 +197,26 @@ class ChoraMediaLibraryService : MediaLibraryService() {
 
     @OptIn(UnstableApi::class)
     fun initializePlayer() {
+
+        serviceIOScope.launch {
+            appearanceSettingsManager.bottomNavItemsFlow.collect { items ->
+                val routeToItem = mapOf(
+                    "home_screen" to homeItem,
+                    "album_screen" to albumsItem,
+                    "artists_screen" to artistsItem,
+                    "radio_screen" to radiosItem,
+                    "playlist_screen" to playlistsItem
+                )
+
+                rootHierarchy = items
+                    .filter { it.enabled }
+                    .mapNotNull { routeToItem[it.screenRoute] }
+                    .toMutableList()
+
+                session?.notifyChildrenChanged("nodeROOT", 0, null)
+            }
+        }
+
         player = ExoPlayer.Builder(this)
             .setSeekParameters(SeekParameters.EXACT)
             .setWakeMode(
@@ -333,7 +355,7 @@ class ChoraMediaLibraryService : MediaLibraryService() {
             val networkCapabilities =
                 connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
 
-            val bitrate: String? = runBlocking {
+            val bitrate: String = runBlocking {
                 when {
                     networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true -> {
                         Log.d("NetworkCheck", "Device is on Wi-Fi")
@@ -350,7 +372,7 @@ class ChoraMediaLibraryService : MediaLibraryService() {
                 }
             }
 
-            val bitrateOptions = if (bitrate != null && bitrate != "No Transcoding" && bitrate.isNotEmpty()) {
+            val bitrateOptions = if (bitrate != "No Transcoding" && bitrate.isNotEmpty()) {
                 runBlocking {
                     "&maxBitRate=$bitrate&format=${playbackSettingsManager.transcodingFormatFlow.first()}"
                 }
