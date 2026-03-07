@@ -1,0 +1,303 @@
+package com.craftworks.music.ui.screens.tv
+
+import android.net.Uri
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.session.MediaController
+import androidx.tv.material3.Button
+import androidx.tv.material3.ButtonDefaults
+import androidx.tv.material3.ExperimentalTvMaterial3Api
+import androidx.tv.material3.Icon
+import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.OutlinedButton
+import androidx.tv.material3.Text
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.craftworks.music.R
+import com.craftworks.music.formatMilliseconds
+import com.craftworks.music.managers.settings.AppearanceSettingsManager
+import com.craftworks.music.player.SongHelper
+import com.craftworks.music.ui.elements.GenrePill
+import com.craftworks.music.ui.elements.dialogs.AddSongToPlaylist
+import com.craftworks.music.ui.elements.dialogs.showAddSongToPlaylistDialog
+import com.craftworks.music.ui.elements.tv.TvHorizontalSongCard
+import com.craftworks.music.ui.viewmodels.AlbumDetailsViewModel
+import kotlinx.coroutines.launch
+
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+fun TvAlbumDetails(
+    selectedAlbumId: String = "",
+    selectedAlbumImage: Uri = Uri.EMPTY,
+    mediaController: MediaController? = null,
+    viewModel: AlbumDetailsViewModel = hiltViewModel()
+) {
+    val context = LocalContext.current
+    val currentAlbum = viewModel.songsInAlbum.collectAsStateWithLifecycle().value
+    val showTrackNumbers by AppearanceSettingsManager(context)
+        .showTrackNumbersFlow.collectAsStateWithLifecycle(false)
+
+    LaunchedEffect(selectedAlbumId) {
+        viewModel.loadAlbumDetails(selectedAlbumId)
+    }
+
+    AnimatedVisibility(
+        visible = currentAlbum.isEmpty(),
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(64.dp),
+                color = MaterialTheme.colorScheme.primary,
+                strokeWidth = 6.dp
+            )
+        }
+    }
+
+    AnimatedVisibility(
+        visible = currentAlbum.isNotEmpty(),
+        enter = fadeIn()
+    ) {
+        val coroutineScope = rememberCoroutineScope()
+        val playRequester = remember { FocusRequester() }
+
+        var isStarred by remember {
+            mutableStateOf(
+                currentAlbum[0].mediaMetadata.extras
+                    ?.getString("starred")?.isNotEmpty() ?: false
+            )
+        }
+
+        LaunchedEffect(Unit) { playRequester.requestFocus() }
+
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 48.dp, vertical = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(40.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .width(260.dp)
+                    .fillMaxHeight()
+                    .focusGroup(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(0.dp)
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(selectedAlbumImage)
+                        .diskCacheKey(selectedAlbumId)
+                        .crossfade(true)
+                        .build(),
+                    placeholder = painterResource(R.drawable.placeholder),
+                    fallback = painterResource(R.drawable.placeholder),
+                    contentScale = ContentScale.Crop,
+                    contentDescription = currentAlbum[0].mediaMetadata.title?.toString(),
+                    modifier = Modifier
+                        .size(240.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                )
+
+                Spacer(Modifier.height(20.dp))
+
+                // Title
+                Text(
+                    text = currentAlbum[0].mediaMetadata.title?.toString() ?: "",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(6.dp))
+
+                // Artist · duration
+                Text(
+                    text = (currentAlbum[0].mediaMetadata.artist?.toString() ?: "") +
+                            " · " +
+                            formatMilliseconds(
+                                currentAlbum[0].mediaMetadata.durationMs
+                                    ?.div(1000)?.toInt() ?: 0
+                            ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Genre pills
+                if (!currentAlbum[0].mediaMetadata.genre.isNullOrEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        currentAlbum[0].mediaMetadata.genre
+                            ?.split(",")
+                            ?.forEach { GenrePill(it.trim()) }
+                    }
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                Button (
+                    onClick = {
+                        coroutineScope.launch {
+                            SongHelper.play(
+                                currentAlbum.subList(1, currentAlbum.size),
+                                0,
+                                mediaController
+                            )
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(playRequester),
+                    contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                ) {
+                    Icon(
+                        Icons.Rounded.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(ButtonDefaults.IconSize),
+                    )
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.Action_Play))
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        mediaController?.shuffleModeEnabled = true
+                        coroutineScope.launch {
+                            val random = currentAlbum.subList(1, currentAlbum.size).indices.random()
+                            SongHelper.play(
+                                currentAlbum.subList(1, currentAlbum.size),
+                                random,
+                                mediaController
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        ImageVector.vectorResource(R.drawable.round_shuffle_28),
+                        contentDescription = null
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(stringResource(R.string.Action_Shuffle))
+                }
+            }
+
+            val songs = currentAlbum.subList(1, currentAlbum.size)
+            val groupedSongs = songs.groupBy { it.mediaMetadata.discNumber }
+
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                contentPadding = PaddingValues(bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (groupedSongs.size > 1) {
+                    groupedSongs.forEach { (discNumber, disc) ->
+                        item {
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.Album_Disc_Number) +
+                                            discNumber.toString(),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(0.5f),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp)
+                                )
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(0.2f),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                        items(disc) { song ->
+                            TvHorizontalSongCard (
+                                song = song,
+                                showTrackNumber = showTrackNumbers,
+                                onClick = {
+                                    coroutineScope.launch {
+                                        SongHelper.play(songs, songs.indexOf(song), mediaController)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                } else {
+                    items(songs) { song ->
+                        TvHorizontalSongCard (
+                            song = song,
+                            showTrackNumber = showTrackNumbers,
+                            onClick = {
+                                coroutineScope.launch {
+                                    SongHelper.play(songs, songs.indexOf(song), mediaController)
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    if (showAddSongToPlaylistDialog.value)
+        AddSongToPlaylist(setShowDialog = { showAddSongToPlaylistDialog.value = it })
+}

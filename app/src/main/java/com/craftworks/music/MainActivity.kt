@@ -17,11 +17,17 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -51,6 +57,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
@@ -79,6 +86,11 @@ import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.tv.material3.DrawerValue
+import androidx.tv.material3.NavigationDrawer
+import androidx.tv.material3.NavigationDrawerItem
+import androidx.tv.material3.NavigationDrawerItemDefaults
+import androidx.tv.material3.rememberDrawerState
 import com.craftworks.music.data.BottomNavItem
 import com.craftworks.music.data.model.Screen
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
@@ -144,10 +156,7 @@ class MainActivity : ComponentActivity() {
                         mediaController?.removeListener(listener)
                     }
                 }
-                // Set background color to colorScheme.background
-                window.decorView.setBackgroundColor(
-                    MaterialTheme.colorScheme.background.toArgb()
-                )
+
 
                 val positionalThreshold = dpToPx(56).toFloat()
                 val velocityThreshold = dpToPx(125).toFloat()
@@ -179,92 +188,112 @@ class MainActivity : ComponentActivity() {
 
                 onBackPressedDispatcher.addCallback(this, backCallback)
 
+                val isTv = LocalConfiguration.current.uiMode and
+                        Configuration.UI_MODE_TYPE_MASK == Configuration.UI_MODE_TYPE_TELEVISION
 
-                Scaffold(
-                    bottomBar = {
-                        AnimatedBottomNavBar(navController, scaffoldState)
-                    },
-                    contentColor = MaterialTheme.colorScheme.onBackground,
-                    containerColor = Color.Transparent
-                ) { paddingValues ->
-                    if ((LocalConfiguration.current.uiMode and Configuration.UI_MODE_TYPE_MASK != Configuration.UI_MODE_TYPE_TELEVISION) && LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
-                        BottomSheetScaffold(
-                            sheetContainerColor = Color.Transparent,
-                            containerColor = Color.Transparent,
-                            sheetPeekHeight = peekHeight + 80.dp + WindowInsets.navigationBars.asPaddingValues()
-                                .calculateBottomPadding(),
-                            //sheetShadowElevation = 6.dp,
-                            sheetShape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp),
-                            sheetDragHandle = { },
-                            scaffoldState = scaffoldState,
-                            sheetContent = {
-                                val coroutineScope = rememberCoroutineScope()
+                if (isTv) {
+                    // Set background color to colorScheme.background
+                    window.decorView.setBackgroundColor(
+                        androidx.tv.material3.MaterialTheme.colorScheme.background.toArgb()
+                    )
+                    TvSideNavigation(navController = navController) {
+                        SetupNavGraph(
+                            navController = navController,
+                            bottomPadding = 0.dp,
+                            mediaController = mediaController
+                        )
+                    }
+                } else {
+                    // Set background color to colorScheme.background
+                    window.decorView.setBackgroundColor(
+                        MaterialTheme.colorScheme.background.toArgb()
+                    )
+                    Scaffold(
+                        bottomBar = {
+                            AnimatedBottomNavBar(navController, scaffoldState)
+                        },
+                        contentColor = MaterialTheme.colorScheme.onBackground,
+                        containerColor = Color.Transparent
+                    ) { paddingValues ->
+                        if ((LocalConfiguration.current.uiMode and Configuration.UI_MODE_TYPE_MASK != Configuration.UI_MODE_TYPE_TELEVISION) && LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                            BottomSheetScaffold(
+                                sheetContainerColor = Color.Transparent,
+                                containerColor = Color.Transparent,
+                                sheetPeekHeight = peekHeight + 80.dp + WindowInsets.navigationBars.asPaddingValues()
+                                    .calculateBottomPadding(),
+                                //sheetShadowElevation = 6.dp,
+                                sheetShape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp),
+                                sheetDragHandle = { },
+                                scaffoldState = scaffoldState,
+                                sheetContent = {
+                                    val coroutineScope = rememberCoroutineScope()
 
-                                Box {
-                                    NowPlayingMiniPlayer(
-                                        scaffoldState = scaffoldState,
-                                        metadata = metadata,
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                scaffoldState.bottomSheetState.expand()
-                                            }
-                                        })
+                                    Box {
+                                        NowPlayingMiniPlayer(
+                                            scaffoldState = scaffoldState,
+                                            metadata = metadata,
+                                            onClick = {
+                                                coroutineScope.launch {
+                                                    scaffoldState.bottomSheetState.expand()
+                                                }
+                                            })
 
-                                    println("Recomposing sheetcontent")
-                                    NowPlayingContent(
-                                        mediaController = mediaController,
-                                        metadata = metadata
-                                    )
-                                }
-
-                                val currentView = LocalView.current
-                                DisposableEffect(scaffoldState.bottomSheetState.targetValue) {
-                                    if (scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded) {
-                                        currentView.keepScreenOn = true
-                                        backCallback.isEnabled  = true
-
-                                        /* Restore nav bars.
-                                        @Suppress("DEPRECATION")
-                                        currentView.systemUiVisibility =
-                                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                                                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                                                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                                                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                                                    View.SYSTEM_UI_FLAG_FULLSCREEN or
-                                                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                                        */
-
-                                        Log.d("NOW-PLAYING", "KeepScreenOn: True")
-                                    } else {
-                                        currentView.keepScreenOn = false
-                                        backCallback.isEnabled = false
-
-                                        /* Restore nav bars.
-                                        @Suppress("DEPRECATION")
-                                        currentView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                                        */
-                                        Log.d("NOW-PLAYING", "KeepScreenOn: False")
+                                        println("Recomposing sheetcontent")
+                                        NowPlayingContent(
+                                            mediaController = mediaController,
+                                            metadata = metadata
+                                        )
                                     }
 
-                                    onDispose {
-                                        currentView.keepScreenOn = false
-                                        backCallback.isEnabled = false
-                                        Log.d("NOW-PLAYING", "KeepScreenOn: False")
+                                    val currentView = LocalView.current
+                                    DisposableEffect(scaffoldState.bottomSheetState.targetValue) {
+                                        if (scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded) {
+                                            currentView.keepScreenOn = true
+                                            backCallback.isEnabled  = true
+
+                                            /* Restore nav bars.
+                                            @Suppress("DEPRECATION")
+                                            currentView.systemUiVisibility =
+                                                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                                                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                                                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                                                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                                                        View.SYSTEM_UI_FLAG_FULLSCREEN or
+                                                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                                            */
+
+                                            Log.d("NOW-PLAYING", "KeepScreenOn: True")
+                                        } else {
+                                            currentView.keepScreenOn = false
+                                            backCallback.isEnabled = false
+
+                                            /* Restore nav bars.
+                                            @Suppress("DEPRECATION")
+                                            currentView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                            */
+                                            Log.d("NOW-PLAYING", "KeepScreenOn: False")
+                                        }
+
+                                        onDispose {
+                                            currentView.keepScreenOn = false
+                                            backCallback.isEnabled = false
+                                            Log.d("NOW-PLAYING", "KeepScreenOn: False")
+                                        }
                                     }
-                                }
-                            }) {
+                                }) {
+                                SetupNavGraph(
+                                    navController,
+                                    peekHeight + paddingValues.calculateBottomPadding(),
+                                    mediaController
+                                )
+                            }
+                        } else {
                             SetupNavGraph(
                                 navController,
-                                peekHeight + paddingValues.calculateBottomPadding(),
+                                0.dp,
                                 mediaController
                             )
                         }
-                    } else {
-                        SetupNavGraph(
-                            navController,
-                            0.dp,
-                            mediaController
-                        )
                     }
                 }
 
@@ -326,6 +355,149 @@ class MainActivity : ComponentActivity() {
                     println("Destroyed, Goodbye :(")
                 }
             })
+        }
+    }
+}
+
+@Composable
+fun TvSideNavigation(
+    navController: NavHostController,
+    content: @Composable () -> Unit
+) {
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val context = LocalContext.current
+
+    val orderedNavItems = AppearanceSettingsManager(context).bottomNavItemsFlow.collectAsState(
+        initial = listOf(
+            BottomNavItem("Home", R.drawable.rounded_home_24, "home_screen"),
+            BottomNavItem(
+                stringResource((R.string.Albums)),
+                R.drawable.rounded_library_music_24,
+                "album_screen"
+            ),
+            BottomNavItem(
+                stringResource((R.string.songs)),
+                R.drawable.round_music_note_24,
+                "songs_screen"
+            ),
+            BottomNavItem(
+                stringResource((R.string.Artists)),
+                R.drawable.rounded_artist_24,
+                "artists_screen"
+            ),
+            BottomNavItem(
+                stringResource((R.string.radios)),
+                R.drawable.rounded_radio,
+                "radio_screen"
+            ),
+            BottomNavItem(
+                stringResource((R.string.playlists)),
+                R.drawable.placeholder,
+                "playlist_screen"
+            ),
+        )
+    ).value
+
+    // The drawer starts closed; it opens (expands labels) when the user
+    // focuses any item inside it with the D-pad.
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+
+    NavigationDrawer(
+        modifier = Modifier.fillMaxSize(),
+        drawerState = drawerState,
+        drawerContent = {
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                orderedNavItems.forEach { item ->
+                    if (!item.enabled) return@forEach
+
+                    val isSelected =
+                        item.screenRoute == backStackEntry?.destination?.route
+
+                    NavigationDrawerItem(
+                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+                        selected = isSelected,
+                        onClick = {
+                            if (!isSelected) {
+                                navController.navigate(item.screenRoute) {
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        },
+                        leadingContent = {
+                            androidx.tv.material3.Icon(
+                                imageVector = ImageVector.vectorResource(item.icon),
+                                contentDescription = item.title,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    ) {
+                        androidx.tv.material3.Text(text = item.title)
+                    }
+                }
+
+                val isPlayingSelected =
+                    Screen.NowPlayingLandscape.route == backStackEntry?.destination?.route
+
+                NavigationDrawerItem(
+                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+                    selected = isPlayingSelected,
+                    onClick = {
+                        if (!isPlayingSelected) {
+                            navController.navigate(Screen.NowPlayingLandscape.route) {
+                                launchSingleTop = true
+                            }
+                        }
+                    },
+                    leadingContent = {
+                        androidx.tv.material3.Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.s_m_playback),
+                            contentDescription = stringResource(R.string.Action_Play),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                ) {
+                    androidx.tv.material3.Text(text = stringResource(R.string.Action_Play))
+                }
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    NavigationDrawerItem(
+                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+                        selected = false,
+                        onClick = {
+                            (context as Activity).finish()
+                            exitProcess(0)
+                        },
+                        leadingContent = {
+                            androidx.tv.material3.Icon(
+                                imageVector = ImageVector.vectorResource(R.drawable.round_power_settings_new_24),
+                                contentDescription = stringResource(R.string.Action_Exit),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        },
+                        colors = NavigationDrawerItemDefaults.colors(
+                            focusedContainerColor = androidx.tv.material3.MaterialTheme.colorScheme.errorContainer,
+                            focusedContentColor = androidx.tv.material3.MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    ) {
+                        androidx.tv.material3.Text(text = stringResource(R.string.Action_Exit))
+                    }
+                }
+            }
+        }
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            content()
         }
     }
 }

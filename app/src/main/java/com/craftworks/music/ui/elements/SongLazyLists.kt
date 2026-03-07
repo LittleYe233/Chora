@@ -1,5 +1,6 @@
 package com.craftworks.music.ui.elements
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -37,6 +38,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -54,6 +56,7 @@ import com.craftworks.music.data.model.toAlbum
 import com.craftworks.music.managers.NavidromeManager
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.player.SongHelper
+import com.craftworks.music.ui.elements.tv.TvAlbumCard
 import com.craftworks.music.ui.viewmodels.AlbumScreenViewModel
 import com.craftworks.music.ui.viewmodels.SongsScreenViewModel
 import kotlinx.coroutines.flow.filter
@@ -402,17 +405,27 @@ fun AlbumRow(
                     }
                 }
             }
-
-            AlbumCard(
-                album = album,
-                onClick = {
-                    onAlbumSelected(album.toAlbum())
-                },
-                onPlay = {
-                    onPlay(album)
-                },
-                modifier = Modifier.animateItem()
-            )
+            val isTV = LocalConfiguration.current.uiMode and
+                    Configuration.UI_MODE_TYPE_MASK == Configuration.UI_MODE_TYPE_TELEVISION
+            if (isTV)
+                TvAlbumCard(
+                    album = album,
+                    onClick = {
+                        onAlbumSelected(album.toAlbum())
+                    },
+                    modifier = Modifier.animateItem()
+                )
+            else
+                AlbumCard(
+                    album = album,
+                    onClick = {
+                        onAlbumSelected(album.toAlbum())
+                    },
+                    onPlay = {
+                        onPlay(album)
+                    },
+                    modifier = Modifier.animateItem()
+                )
         }
     }
 }

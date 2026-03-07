@@ -61,6 +61,10 @@ import com.craftworks.music.ui.screens.SongsScreen
 import com.craftworks.music.ui.screens.settings.S_AppearanceScreen
 import com.craftworks.music.ui.screens.settings.S_PlaybackScreen
 import com.craftworks.music.ui.screens.settings.S_ProviderScreen
+import com.craftworks.music.ui.screens.tv.TvAlbumDetails
+import com.craftworks.music.ui.screens.tv.TvAlbumScreen
+import com.craftworks.music.ui.screens.tv.TvArtistScreen
+import com.craftworks.music.ui.screens.tv.TvHomeScreen
 import com.craftworks.music.ui.viewmodels.AlbumScreenViewModel
 import com.craftworks.music.ui.viewmodels.ArtistsScreenViewModel
 import com.craftworks.music.ui.viewmodels.HomeScreenViewModel
@@ -77,6 +81,8 @@ fun SetupNavGraph(
     mediaController: MediaController?
 ) {
     val context = LocalContext.current
+    val isTv = LocalConfiguration.current.uiMode and
+            Configuration.UI_MODE_TYPE_MASK == Configuration.UI_MODE_TYPE_TELEVISION
 
     playlistList =
         LocalDataSettingsManager(context).localPlaylists.collectAsStateWithLifecycle(mutableListOf()).value
@@ -87,7 +93,7 @@ fun SetupNavGraph(
     LyricsState.useNetEase =
         MediaProviderSettingsManager(context).netEaseLyricsFlow.collectAsStateWithLifecycle(true).value
 
-    val leftPadding = if (LocalConfiguration.current.orientation != Configuration.ORIENTATION_LANDSCAPE) 0.dp else 80.dp + WindowInsets.safeDrawing.asPaddingValues().calculateLeftPadding(
+    val leftPadding = if (LocalConfiguration.current.orientation != Configuration.ORIENTATION_LANDSCAPE || isTv) 0.dp else 80.dp + WindowInsets.safeDrawing.asPaddingValues().calculateLeftPadding(
         LayoutDirection.Ltr)
 
     val animationSpec = MaterialTheme.LocalMotionScheme.current.slowSpatialSpec<Float>()
@@ -116,7 +122,10 @@ fun SetupNavGraph(
                 navController.getBackStackEntry("main_graph")
             }
             val viewModel: HomeScreenViewModel = hiltViewModel(parentEntry)
-            HomeScreen(navController, mediaController, viewModel)
+            if (isTv)
+                TvHomeScreen(navController, mediaController, viewModel)
+            else
+                HomeScreen(navController, mediaController, viewModel)
         }
         composable(
             route = Screen.HomeLists.route + "/{category}",
@@ -166,7 +175,10 @@ fun SetupNavGraph(
                 navController.getBackStackEntry("main_graph")
             }
             val viewModel: AlbumScreenViewModel = hiltViewModel(parentEntry)
-            AlbumScreen(navController, mediaController, viewModel)
+            if (isTv)
+                TvAlbumScreen(navController, viewModel)
+            else
+                AlbumScreen(navController, mediaController, viewModel)
         }
         composable(
             route = Screen.AlbumDetails.route + "/{album}/{image}",
@@ -181,12 +193,19 @@ fun SetupNavGraph(
         ) { backStackEntry ->
             val albumId = backStackEntry.arguments?.getString("album") ?: ""
             val albumImageUri = URLDecoder.decode(backStackEntry.arguments?.getString("image"), "UTF-8")
-            AlbumDetails(
-                albumId,
-                albumImageUri.toUri(),
-                navController,
-                mediaController,
-            )
+            if (isTv)
+                TvAlbumDetails(
+                    albumId,
+                    albumImageUri.toUri(),
+                    mediaController,
+                )
+            else
+                AlbumDetails(
+                    albumId,
+                    albumImageUri.toUri(),
+                    navController,
+                    mediaController,
+                )
         }
         //Artist
         navigation(startDestination = Screen.Artists.route, route = "artists_graph") {
@@ -195,7 +214,10 @@ fun SetupNavGraph(
                     navController.getBackStackEntry("main_graph")
                 }
                 val viewModel: ArtistsScreenViewModel = hiltViewModel(parentEntry)
-                ArtistsScreen(navController, viewModel)
+                if (isTv)
+                    TvArtistScreen(navController, viewModel)
+                else
+                    ArtistsScreen(navController, viewModel)
             }
             composable(route = Screen.ArtistDetails.route) { backStackEntry ->
                 val parentEntry = remember(backStackEntry) {

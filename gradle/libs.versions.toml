@@ -1,6 +1,6 @@
 [versions]
-activityCompose = "1.12.3"
-composeBom = "2026.01.01"
+activityCompose = "1.12.4"
+composeBom = "2026.02.01"
 coreKtx = "1.17.0"
 espressoCore = "3.7.0"
 githubComposefadingedges = "1.0.4"
@@ -10,9 +10,9 @@ konsumeXml = "1.4"
 kotlin = "2.3.0"
 datastoreCoreAndroid = "1.2.0"
 kotlinxSerializationJson = "1.10.0"
-ktorClient = "3.4.0"
+ktorClient = "3.4.1"
 lifecycleRuntimeKtx = "2.10.0"
-material3Android = "1.5.0-alpha13"
+material3Android = "1.5.0-alpha15"
 media = "1.7.1"
 media3 = "1.9.2"
 mediarouter = "1.8.1"
@@ -21,6 +21,8 @@ paletteKtx = "1.0.0"
 preferenceKtx = "1.2.1"
 hilt = "2.58"
 hiltExt = "1.3.0"
+tvMaterial = "1.0.1"
+tvFoundation = "1.0.0-alpha12"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -41,6 +43,8 @@ androidx-mediarouter = { module = "androidx.mediarouter:mediarouter", version.re
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-palette-ktx = { module = "androidx.palette:palette-ktx", version.ref = "paletteKtx" }
 androidx-preference-ktx = { module = "androidx.preference:preference-ktx", version.ref = "preferenceKtx" }
+androidx-tv-foundation = { module = "androidx.tv:tv-foundation", version.ref = "tvFoundation" }
+androidx-tv-material = { module = "androidx.tv:tv-material", version.ref = "tvMaterial" }
 androidx-ui = { module = "androidx.compose.ui:ui" }
 androidx-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
 androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
