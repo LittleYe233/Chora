@@ -17,6 +17,7 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -153,7 +154,7 @@ fun LyricsView(
                     if (targetItemAfter != null) {
                         var finalScrollDelta = targetItemAfter.offset - scrollOffset
 
-                        if (lyrics[(targetIndex - 1).coerceAtLeast(0)].content == "")
+                        if (lyrics[(targetIndex - 1).coerceAtLeast(0)].content[0] == "")
                             finalScrollDelta -= interludeHeight
 
                         state.animateScrollBy(
@@ -254,7 +255,7 @@ fun LyricsView(
                 else if (lyrics.isNotEmpty()) {
                     item {
                         Text(
-                            text = lyrics[0].content,
+                            text = lyrics[0].content[0],
                             style = MaterialTheme.typography.headlineMedium,
                             color = color,
                             modifier = Modifier
@@ -300,7 +301,7 @@ fun SyncedLyricItem(
         animationSpec = tween(lyricsAnimationSpeed, 0, FastOutSlowInEasing)
     )
 
-    if (lyric.content.isEmpty()) {
+    if (lyric.content[0].isEmpty()) {
         AnimatedContent(
             targetState = currentLyricIndex == index
         ) {
@@ -319,7 +320,7 @@ fun SyncedLyricItem(
         }
     }
     else {
-        Box(modifier = Modifier
+        Column(modifier = Modifier
             .padding(vertical = 12.dp)
             .heightIn(min = 48.dp)
             .focusable(false)
@@ -330,17 +331,30 @@ fun SyncedLyricItem(
             .blur(lyricBlur)
             .clickable {
                 onClick()
-            }, contentAlignment = Alignment.Center
+            },
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceEvenly
+            //contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = lyric.content,
-                style = MaterialTheme.typography.titleLarge,
-                //fontWeight = FontWeight.Bold,
-                color = color.copy(lyricAlpha),
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                //lineHeight = 32.sp
-            )
+//            Text(
+//                text = lyric.content,
+//                style = MaterialTheme.typography.titleLarge,
+//                //fontWeight = FontWeight.Bold,
+//                color = color.copy(lyricAlpha),
+//                modifier = Modifier.fillMaxWidth(),
+//                textAlign = TextAlign.Center,
+//                //lineHeight = 32.sp
+//            )
+            lyric.content.forEachIndexed { i, line ->
+                Text(
+                    text = line,
+                    style = if (i == 0) MaterialTheme.typography.titleLarge
+                    else MaterialTheme.typography.bodyMedium,
+                    color = color.copy(alpha = if (i == 0) lyricAlpha else lyricAlpha * 0.65f),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
 }

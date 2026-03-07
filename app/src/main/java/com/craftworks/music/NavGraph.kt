@@ -84,6 +84,9 @@ fun SetupNavGraph(
     LyricsState.useLrcLib =
         MediaProviderSettingsManager(context).lrcLibLyricsFlow.collectAsStateWithLifecycle(true).value
 
+    LyricsState.useNetEase =
+        MediaProviderSettingsManager(context).netEaseLyricsFlow.collectAsStateWithLifecycle(true).value
+
     val leftPadding = if (LocalConfiguration.current.orientation != Configuration.ORIENTATION_LANDSCAPE) 0.dp else 80.dp + WindowInsets.safeDrawing.asPaddingValues().calculateLeftPadding(
         LayoutDirection.Ltr)
 

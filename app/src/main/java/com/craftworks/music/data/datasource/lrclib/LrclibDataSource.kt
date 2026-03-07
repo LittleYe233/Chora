@@ -63,20 +63,17 @@ class LrclibDataSource @Inject constructor(
         try {
             val response = client.get(baseUrl) {
                 url {
-                    appendPathSegments("api", "get") // Handles slashes automatically
+                    appendPathSegments("api", "get")
                 }
 
-                // Ktor handles URL Encoding automatically here
                 parameter("artist_name", artist)
                 parameter("track_name", title)
                 parameter("album_name", album)
                 parameter("duration", duration)
 
-                // Headers
                 header(HttpHeaders.UserAgent, "Chora - Navidrome Client (https://github.com/CraftWorksMC/Chora)")
             }
 
-            // Parse JSON
             val mediaDataPlainLyrics: LrcLibLyrics = response.body()
             return@withContext mediaDataPlainLyrics.toLyrics()
 

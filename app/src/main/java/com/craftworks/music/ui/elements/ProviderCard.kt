@@ -283,3 +283,54 @@ fun LRCLIBProviderCard(
         Spacer(Modifier.width(20.dp))
     }
 }
+
+@Preview
+@Composable
+fun NetEaseProviderCard(
+    context: Context = LocalContext.current
+){
+    var showEditDialog by remember { mutableStateOf(false) }
+    Row(modifier = Modifier
+        .padding(bottom = 12.dp)
+        .clip(RoundedCornerShape(12.dp))
+        .background(MaterialTheme.colorScheme.surfaceBright)
+        .selectableGroup(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Provider Icon
+        Image(
+            painter = painterResource(R.drawable.netease_cloud_music),
+            contentDescription = "NetEase logo",
+            modifier = Modifier
+                .padding(start = 20.dp, end = 16.dp)
+                .size(32.dp)
+        )
+        // Provider Name
+        Column(modifier = Modifier.weight(1f).padding(vertical = 10.dp)) {
+            Text(
+                text = "Lyrics",
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier
+            )
+            Text(
+                text = "NetEase",
+                color = MaterialTheme.colorScheme.onBackground.copy(0.75f),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+
+        // Enabled Checkbox
+        Checkbox(
+            checked = LyricsState.useNetEase,
+            onCheckedChange = {
+                LyricsState.useNetEase = it
+                runBlocking {
+                    MediaProviderSettingsManager(context).setUseNetEase(it)
+                }
+            }
+        )
+
+        Spacer(Modifier.width(12.dp))
+    }
+}

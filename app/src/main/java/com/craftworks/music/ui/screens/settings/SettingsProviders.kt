@@ -46,6 +46,7 @@ import com.craftworks.music.providers.navidrome.navidromeStatus
 import com.craftworks.music.ui.elements.LRCLIBProviderCard
 import com.craftworks.music.ui.elements.LocalProviderCard
 import com.craftworks.music.ui.elements.NavidromeProviderCard
+import com.craftworks.music.ui.elements.NetEaseProviderCard
 import com.craftworks.music.ui.elements.dialogs.CreateMediaProviderDialog
 import com.craftworks.music.ui.elements.dialogs.dialogFocusable
 
@@ -102,6 +103,8 @@ fun S_ProviderScreen(navHostController: NavHostController = rememberNavControlle
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 LRCLIBProviderCard(context)
+
+                NetEaseProviderCard(context)
 
                 val localProviders by LocalProviderManager.allFolders.collectAsStateWithLifecycle()
                 val navidromeServers by NavidromeManager.allServers.collectAsStateWithLifecycle()

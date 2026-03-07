@@ -48,7 +48,7 @@ fun MediaData.Song.toMediaItem(): MediaItem {
             .setGenre(this@toMediaItem.genres?.joinToString() { it.name ?: "" })
             .setExtras(Bundle().apply {
                 putString("navidromeID", this@toMediaItem.navidromeID)
-                putString("lyricsArtist", this@toMediaItem.artists[0].name)
+                putString("lyricsArtist", if (this@toMediaItem.artists.isNotEmpty()) this@toMediaItem.artists[0].name else this@toMediaItem.artist)
                 putInt("duration", this@toMediaItem.duration)
                 putString("format", this@toMediaItem.format)
                 putLong("bitrate", this@toMediaItem.bitrate?.toLong() ?: 0)

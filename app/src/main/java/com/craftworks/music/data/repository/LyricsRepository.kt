@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.media3.common.MediaMetadata
 import com.craftworks.music.data.datasource.lrclib.LrclibDataSource
 import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
+import com.craftworks.music.data.datasource.netease.NeteaseDataSource
 import com.craftworks.music.data.model.Lyric
 import com.craftworks.music.managers.NavidromeManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,17 +19,19 @@ object LyricsState {
     val loading = MutableStateFlow<Boolean>(false)
     var open = mutableStateOf<Boolean>(false)
     var useLrcLib by mutableStateOf(true)
+    var useNetEase by mutableStateOf(true)
 }
 
 @Singleton
 class LyricsRepository @Inject constructor(
     val lrclibDataSource: LrclibDataSource,
+    val neteaseDataSource: NeteaseDataSource,
     val navidromeDataSource: NavidromeDataSource
 ) {
     suspend fun getLyrics(metadata: MediaMetadata?) {
         // Try getting lyrics through navidrome, first synced then plain.
-        // If that fails, try LRCLIB.net.
-        // If we turned it off or we cannot find lyrics, then return an empty list
+        // If that fails, try LRCLIB.net or NetEase.
+        // If we turned them off, or we cannot find lyrics, then return an empty list
 
         if (metadata?.mediaType == MediaMetadata.MEDIA_TYPE_RADIO_STATION) {
             LyricsState.lyrics.value = listOf()
@@ -79,10 +82,25 @@ class LyricsRepository @Inject constructor(
             }
         }
 
-        LyricsState.loading.value = false;
+        if (LyricsState.useNetEase) {
+            if (foundNavidromePlainLyrics) {
+                Log.d("LYRICS", "Got Navidrome plain lyrics, trying LRCLIB.")
+                neteaseDataSource.getNeteaseLyrics(metadata).takeIf { it.isNotEmpty() }?.let {
+                    if (it.size != 1) LyricsState.lyrics.value = it
+                    LyricsState.loading.value = false;
+                    return
+                }
+            }
+
+            neteaseDataSource.getNeteaseLyrics(metadata).takeIf { it.isNotEmpty() }?.let {
+                Log.d("LYRICS", "Got NETEASE lyrics.")
+                LyricsState.lyrics.value = it
+                LyricsState.loading.value = false;
+                return
+            }
+        }
 
         Log.d("LYRICS", "Didn't find any lyrics.")
-        //lyricsOpen = false
         LyricsState.lyrics.value = listOf()
     }
 }

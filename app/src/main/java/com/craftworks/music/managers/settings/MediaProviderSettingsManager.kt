@@ -18,6 +18,7 @@ class MediaProviderSettingsManager @Inject constructor(
     companion object {
         private val LRCLIB_ENDPOINT = stringPreferencesKey("lrclib_endpoint")
         private val LRCLIB_LYRICS = booleanPreferencesKey("lrclib_lyrics_enabled")
+        private val NETEASE_LYRICS = booleanPreferencesKey("netease_lyrics_enabled")
     }
 
     val lrcLibEndpointFlow: Flow<String> = context.dataStore.data.map {
@@ -31,12 +32,22 @@ class MediaProviderSettingsManager @Inject constructor(
     }
 
     val lrcLibLyricsFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[LRCLIB_LYRICS] ?: true // Original used != false, interpreting null as true
+        preferences[LRCLIB_LYRICS] ?: true
     }
 
     suspend fun setUseLrcLib(useLrcLib: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[LRCLIB_LYRICS] = useLrcLib
+        }
+    }
+
+    val netEaseLyricsFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[NETEASE_LYRICS] ?: true
+    }
+
+    suspend fun setUseNetEase(useNetEase: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[NETEASE_LYRICS] = useNetEase
         }
     }
 }

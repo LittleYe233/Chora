@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 @Stable
 data class Lyric(
     val timestamp: Int,
-    val content: String
+    val content: List<String>
 )
 
 
@@ -21,48 +21,100 @@ data class LrcLibLyrics(
     val syncedLyrics: String? = ""
 )
 
+// NetEase Lyrics
+@Serializable
+data class NeteaseLyricsResponse(
+    val lrc: NeteaseLrc? = null,
+    val tlyric: NeteaseLrc? = null   // translation, may be absent or empty
+)
+
+@Serializable
+data class NeteaseLrc(
+    val lyric: String? = null
+)
+
 //region Convert proprietary lyric format to app format.
 
 fun MediaData.PlainLyrics.toLyric(): Lyric {
     return Lyric(
         timestamp = -1,
-        content = value
+        content = listOf(value)
     )
 }
 
 fun MediaData.StructuredLyrics.toLyrics(): List<Lyric> {
-    return line.map { syncedLyric ->
-        Lyric(
-            // If not synced lyrics, set timestamp to -1
-            timestamp = if (synced) syncedLyric.start + (offset ?: 0) else -1,
-            content = syncedLyric.value
-        )
-    }
+    return line
+        .groupBy { if (synced) it.start + (offset ?: 0) else -1 }
+        .map { (timestamp, lines) ->
+            Lyric(
+                timestamp = timestamp,
+                content = lines.map { it.value }
+            )
+        }
+        .sortedBy { it.timestamp }
 }
 
 fun LrcLibLyrics.toLyrics(): List<Lyric> {
     if (instrumental) return listOf()
 
     else if (syncedLyrics.toString() != "null") {
-        val result = mutableListOf<Lyric>()
-
+        val raw = mutableListOf<Pair<Int, String>>()
         syncedLyrics?.lines()?.forEach { lyric ->
             val timeStampsRaw = getTimeStamps(lyric)[0]
-            val time = mmssToMilliseconds(timeStampsRaw)
-            val lyricText: String = lyric.drop(10).trim()
-
-            result.add(Lyric(time.toInt(), lyricText))
+            val time = mmssToMilliseconds(timeStampsRaw).toInt()
+            val lyricText = lyric.drop(10).trim()
+            raw.add(Pair(time, lyricText))
         }
 
-        Log.d("LYRICS", "Got LRCLIB synced lyrics: $result")
-        return result
+        // Group lines sharing the same timestamp
+        return raw
+            .groupBy { it.first }
+            .map { (time, lines) -> Lyric(time, lines.map { it.second }) }
+            .sortedBy { it.timestamp }
     }
     else if (plainLyrics.toString() != "null") {
         Log.d("LYRICS", "Got LRCLIB plain lyrics: $plainLyrics")
-        return listOf(Lyric(-1, plainLyrics.toString()))
+        return listOf(Lyric(-1, listOf(plainLyrics.toString())))
     }
     else
         return listOf()
+}
+
+fun NeteaseLyricsResponse.toLyrics(): List<Lyric> {
+    val originalMap = mutableMapOf<Int, String>()
+    val translationMap = mutableMapOf<Int, String>()
+
+    lrc?.lyric?.lines()?.forEach { line ->
+        val tags = getTimeStamps(line)
+        if (tags.isEmpty()) return@forEach
+        val text = line.substringAfter("]").trim()
+        tags.forEach { tag ->
+            val time = mmssToMilliseconds(tag).toInt()
+            originalMap[time] = text
+        }
+    }
+    if (!tlyric?.lyric.isNullOrEmpty()) {
+        tlyric.lyric.lines().forEach { line ->
+            val tags = getTimeStamps(line)
+            if (tags.isEmpty()) return@forEach
+            val text = line.substringAfter("]").trim()
+            tags.forEach { tag ->
+                val time = mmssToMilliseconds(tag).toInt()
+                translationMap[time] = text
+            }
+        }
+    }
+
+    // Group lines sharing the same timestamp
+    return originalMap
+        .map { (timestamp, origLine) ->
+            val lines = buildList {
+                add(origLine)
+                translationMap[timestamp]?.let { add(it) }
+            }
+            Lyric(timestamp = timestamp, content = lines)
+        }
+        .sortedBy { it.timestamp }
 }
 
 //endregion
@@ -73,7 +125,7 @@ fun mmssToMilliseconds(mmss: String): Long {
         try {
             val minutes = parts[0].toLong()
             val seconds = parts[1].toLong()
-            val ms = parts[2].toLong()
+            val ms = parts[2].substring(0,2).toLong()
             return (minutes * 60 + seconds) * 1000 + ms * 10
         } catch (e: NumberFormatException) {
             // Handle the case where the input is not in the expected format

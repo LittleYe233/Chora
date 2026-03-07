@@ -4,6 +4,7 @@ import android.content.Context
 import com.craftworks.music.data.datasource.local.LocalDataSource
 import com.craftworks.music.data.datasource.lrclib.LrclibDataSource
 import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
+import com.craftworks.music.data.datasource.netease.NeteaseDataSource
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.managers.settings.LocalDataSettingsManager
 import com.craftworks.music.managers.settings.MediaProviderSettingsManager
@@ -42,5 +43,13 @@ object DataSourceModule {
         @ApplicationContext context: Context
     ): LrclibDataSource {
         return LrclibDataSource(settingsManager, context)
+    }
+
+    @Singleton
+    @Provides
+    fun provideNetEaseDataSource(
+        @ApplicationContext context: Context
+    ): NeteaseDataSource {
+        return NeteaseDataSource(context)
     }
 }
