@@ -3,15 +3,13 @@ package com.craftworks.music.providers.navidrome
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
+import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
 import com.craftworks.music.data.model.MediaData
 import com.craftworks.music.data.model.albumList
 import com.craftworks.music.data.model.artistList
 import com.craftworks.music.data.model.songsList
 import com.craftworks.music.data.model.toMediaItem
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.jsonObject
 
 @Serializable
 data class SearchResult3(
@@ -27,15 +25,11 @@ fun parseNavidromeSearch3JSON(
     navidromeUsername: String,
     navidromePassword: String,
 ) : List<Any> {
-
-    val jsonParser = Json { ignoreUnknownKeys = true }
-    val subsonicResponse = jsonParser.decodeFromJsonElement<SubsonicResponse>(
-        jsonParser.parseToJsonElement(response).jsonObject["subsonic-response"]!!
-    )
+    val subsonicResponse = parseSubsonicResponse(response)
 
     // Generate password salt and hash
-    val passwordSaltMedia = generateSalt(8)
-    val passwordHashMedia = md5Hash(navidromePassword + passwordSaltMedia)
+    val passwordSaltMedia = NavidromeDataSource.generateSalt(8)
+    val passwordHashMedia = NavidromeDataSource.md5Hash(navidromePassword + passwordSaltMedia)
 
     subsonicResponse.searchResult3?.song?.map {
         it.media = "$navidromeUrl/rest/stream.view?&id=${it.navidromeID}&u=$navidromeUsername&t=$passwordHashMedia&s=$passwordSaltMedia&v=1.12.0&c=Chora"

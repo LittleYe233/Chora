@@ -8,6 +8,7 @@ import androidx.core.net.toUri
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import com.craftworks.music.R
+import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
 import com.craftworks.music.managers.NavidromeManager.getCurrentServer
 import java.io.File
 
@@ -19,8 +20,8 @@ fun downloadNavidromeSong(
 ) {
     val server = getCurrentServer() ?: return
 
-    val passwordSalt = generateSalt(8)
-    val passwordHash = md5Hash(server.password + passwordSalt)
+    val passwordSalt = NavidromeDataSource.generateSalt(8)
+    val passwordHash = NavidromeDataSource.md5Hash(server.password + passwordSalt)
     val url = "${server.url}/rest/download.view?id=${song.extras?.getString("navidromeID")}&u=${server.username}&t=$passwordHash&s=$passwordSalt&v=1.16.1&c=Chora".toUri()
 
     val extension = song.extras?.getString("format") ?: "mp3"

@@ -39,26 +39,24 @@ object NavidromeManager {
 
     private val _syncStatus = MutableStateFlow(false)
 
-    fun addServer(server: NavidromeProvider) {
+    fun addServer(server: NavidromeProvider, isPing: Boolean = false) {
         Log.d("NAVIDROME", "Added server $server")
         servers[server.id] = server
-        // Set newly added server as current
-        if (_currentServerId.value == null) {
-            _currentServerId.value = server.id
-        }
-        // Not really ideal.
-        val oldServerId = _currentServerId.value
         _currentServerId.value = server.id
+
+        if (isPing)
+            return
+
         val fetchedLibraries = runBlocking {
             NavidromeDataSource().getNavidromeLibraries().map {
                 Pair(it, true)
             }
         }
-        _currentServerId.value = oldServerId
         setServerLibraries(server.id, fetchedLibraries)
         if (server.id == _currentServerId.value) {
             _libraries.value = fetchedLibraries
         }
+
         updateServersFlow()
         saveServers()
     }
@@ -90,12 +88,15 @@ object NavidromeManager {
         }
     }
 
-    fun removeServer(id: String) {
+    fun removeServer(id: String, isPing: Boolean = false) {
         servers.remove(id)
         if (_currentServerId.value == id) {
             _currentServerId.value = servers.keys.firstOrNull()
             _libraries.value = _currentServerId.value?.let { servers[it]?.libraryIds } ?: emptyList()
         }
+        if (isPing)
+            return
+
         updateServersFlow()
         saveServers()
     }

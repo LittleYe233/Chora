@@ -4,12 +4,10 @@ import androidx.annotation.OptIn
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
+import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
 import com.craftworks.music.data.model.MediaData
 import com.craftworks.music.data.model.toMediaItem
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.jsonObject
 
 @Serializable
 data class albumList(val album: List<MediaData.Album>? = listOf())
@@ -20,14 +18,11 @@ fun parseNavidromeAlbumListJSON(
     navidromeUsername: String,
     navidromePassword: String,
 ) : List<MediaItem> {
-    val jsonParser = Json { ignoreUnknownKeys = true }
-    val subsonicResponse = jsonParser.decodeFromJsonElement<SubsonicResponse>(
-        jsonParser.parseToJsonElement(response).jsonObject["subsonic-response"]!!
-    )
+    val subsonicResponse = parseSubsonicResponse(response)
 
     // Generate password salt and hash for coverArt
-    val passwordSaltArt = generateSalt(8)
-    val passwordHashArt = md5Hash(navidromePassword + passwordSaltArt)
+    val passwordSaltArt = NavidromeDataSource.generateSalt(8)
+    val passwordHashArt = NavidromeDataSource.md5Hash(navidromePassword + passwordSaltArt)
 
     val baseCoverArtUrl = "$navidromeUrl/rest/getCoverArt.view?u=$navidromeUsername&t=$passwordHashArt&s=$passwordSaltArt&v=1.16.1&c=Chora&size=128"
 
@@ -41,13 +36,6 @@ fun parseNavidromeAlbumListJSON(
     } ?: emptyList()
 
     return mediaDataAlbums
-        //.asSequence()
-//        .filterNot { newAlbum ->
-//            albumList.any { existingAlbum ->
-//                existingAlbum.navidromeID == newAlbum.mediaMetadata.extras?.getString("navidromeID")
-//            }
-//        }
-        //.toList()
 }
 
 @OptIn(UnstableApi::class)
@@ -57,23 +45,19 @@ fun parseNavidromeAlbumJSON(
     navidromeUsername: String,
     navidromePassword: String,
 ): List<MediaItem> {
-    val jsonParser = Json { ignoreUnknownKeys = true }
-    val subsonicResponse = jsonParser.decodeFromJsonElement<SubsonicResponse>(
-        jsonParser.parseToJsonElement(response).jsonObject["subsonic-response"]!!
-    )
+    val subsonicResponse = parseSubsonicResponse(response)
 
-    val passwordSalt = generateSalt(8)
-    val passwordHash = md5Hash(navidromePassword + passwordSalt)
+    val passwordSalt = NavidromeDataSource.generateSalt(8)
+    val passwordHash = NavidromeDataSource.md5Hash(navidromePassword + passwordSalt)
 
     val selectedAlbum = subsonicResponse.album
     val album = mutableListOf<MediaItem>()
 
-    selectedAlbum?.songs?.map {
+    selectedAlbum?.songs?.forEach {
         it.media = "$navidromeUrl/rest/stream.view?&id=${it.navidromeID}&u=$navidromeUsername&t=$passwordHash&s=$passwordSalt&v=1.12.0&c=Chora"
         it.imageUrl = "$navidromeUrl/rest/getCoverArt.view?&id=${it.navidromeID}&u=$navidromeUsername&t=$passwordHash&s=$passwordSalt&v=1.16.1&c=Chora&size=128"
     }
 
-    // Create the Album MediaItem
     album.add(selectedAlbum?.toMediaItem() ?: MediaItem.EMPTY)
 
     println("Added album: ${selectedAlbum?.navidromeID}")

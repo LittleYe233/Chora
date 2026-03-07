@@ -14,15 +14,15 @@ import kotlinx.serialization.json.jsonObject
 var navidromeStatus = mutableStateOf("")
 
 suspend fun getNavidromeStatus(server: NavidromeProvider){
-    NavidromeManager.addServer(server)
+    NavidromeManager.addServer(server, true)
     NavidromeDataSource().pingNavidromeServer()
-    NavidromeManager.removeServer(server.id)
+    NavidromeManager.removeServer(server.id, true)
 }
 
 @Serializable
 @SerialName("error")
 data class SubsonicError(
-    val code: String,
+    val code: Int,
     val message: String
 )
 
@@ -34,14 +34,14 @@ fun parseNavidromeStatus(
         jsonParser.parseToJsonElement(response).jsonObject["subsonic-response"]!!
     )
 
-    if (subsonicResponse.status != "ok") {
-        val errorCode = subsonicResponse.error?.code
-        val errorMessage = subsonicResponse.error?.message
-        Log.d("NAVIDROME", "Navidrome Error Code: $errorCode, Message: $errorMessage")
-        navidromeStatus.value = "Error $errorCode: $errorMessage"
-        return listOf(subsonicResponse.error?.message ?: "")
+    if (subsonicResponse.status == "ok") {
+        navidromeStatus.value = "ok"
+        return listOf(subsonicResponse.status)
     }
 
-    navidromeStatus.value = "ok"
-    return listOf(subsonicResponse.status)
+    val errorCode = subsonicResponse.error?.code
+    val errorMessage = subsonicResponse.error?.message
+    Log.d("NAVIDROME", "Navidrome Error Code: $errorCode, Message: $errorMessage")
+    navidromeStatus.value = "Error $errorCode: $errorMessage"
+    return listOf(subsonicResponse.error?.message ?: "")
 }

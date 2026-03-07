@@ -10,6 +10,7 @@ import com.craftworks.music.data.model.MediaData
 import com.craftworks.music.data.model.toLyric
 import com.craftworks.music.data.model.toLyrics
 import com.craftworks.music.managers.NavidromeManager
+import com.craftworks.music.providers.navidrome.navidromeStatus
 import com.craftworks.music.providers.navidrome.parseNavidromeAlbumJSON
 import com.craftworks.music.providers.navidrome.parseNavidromeAlbumListJSON
 import com.craftworks.music.providers.navidrome.parseNavidromeArtistAlbumsJSON
@@ -37,10 +38,13 @@ import io.ktor.client.request.headers
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.URLBuilder
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import java.net.ConnectException
+import java.nio.channels.UnresolvedAddressException
 import java.security.MessageDigest
 import java.security.cert.X509Certificate
 import javax.inject.Inject
@@ -65,15 +69,19 @@ class NavidromeDataSource @Inject constructor() {
         }
     }
 
-    private fun md5Hash(input: String): String {
-        val md = MessageDigest.getInstance("MD5")
-        val hashBytes = md.digest(input.toByteArray())
-        return hashBytes.joinToString("") { "%02x".format(it) }
-    }
+    private val insecureClient: HttpClient by lazy { buildInsecureClient() }
 
-    private fun generateSalt(length: Int): String {
-        val allowedChars = ('a'..'z') + ('A'..'Z') + ('0'..'9')
-        return (1..length).map { allowedChars.random() }.joinToString("")
+    companion object {
+        fun md5Hash(input: String): String {
+            val md = MessageDigest.getInstance("MD5")
+            val hashBytes = md.digest(input.toByteArray())
+            return hashBytes.joinToString("") { "%02x".format(it) }
+        }
+
+        fun generateSalt(length: Int): String {
+            val allowedChars = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+            return (1..length).map { allowedChars.random() }.joinToString("")
+        }
     }
 
     private fun buildInsecureClient(): HttpClient {
@@ -109,19 +117,23 @@ class NavidromeDataSource @Inject constructor() {
         musicFolderIds: List<Int>? = null,
         ignoreCachedResponse: Boolean = false
     ): List<Any> = withContext(Dispatchers.IO) {
-        val server = NavidromeManager.getCurrentServer() ?: throw IllegalArgumentException("No active Navidrome server")
+        val server = NavidromeManager.getCurrentServer() ?: return@withContext emptyList()
+
         val salt = generateSalt(8)
         val token = md5Hash(server.password + salt)
-        var url = "${server.url}/rest/$endpoint&u=${server.username}&t=$token&s=$salt&v=1.16.1&c=Chora"
 
-        // Append musicFolderId parameters if provided
-        musicFolderIds?.forEach { folderId ->
-            url += "&musicFolderId=$folderId"
-        }
+        val url = URLBuilder("${server.url}/rest/$endpoint").apply {
+            parameters.append("u", server.username)
+            parameters.append("t", token)
+            parameters.append("s", salt)
+            musicFolderIds?.forEach { parameters.append("musicFolderId", it.toString()) }
+            parameters.append("v", "1.16.1")
+            parameters.append("c", "Chora")
+        }.buildString()
 
         NavidromeManager.setSyncingStatus(true)
 
-        val activeClient = if (server.allowSelfSignedCert == true) buildInsecureClient() else client
+        val activeClient = if (server.allowSelfSignedCert == true) insecureClient else client
         val parsedData = mutableListOf<Any>()
 
         try {
@@ -136,7 +148,7 @@ class NavidromeDataSource @Inject constructor() {
 
             if (response.status != HttpStatusCode.OK) {
                 Log.w("NAVIDROME", "HTTP ${response.status} for URL: $url")
-                return@withContext emptyList<Any>()
+                return@withContext emptyList()
             }
             val responseContent = response.bodyAsText()
 
@@ -166,8 +178,15 @@ class NavidromeDataSource @Inject constructor() {
                 endpoint.startsWith("star") -> { NavidromeManager.setSyncingStatus(false) }
                 endpoint.startsWith("unstar") -> { NavidromeManager.setSyncingStatus(false) }
             }
+        } catch (e: UnresolvedAddressException) {
+            Log.e("NAVIDROME", "Network error for URL: $url", e)
+            navidromeStatus.value = "Unknown host"
+        }catch (e: ConnectException) {
+            Log.e("NAVIDROME", "Network error for URL: $url", e)
+            navidromeStatus.value = e.message.toString()
         } catch (e: Exception) {
             Log.e("NAVIDROME", "Network error for URL: $url", e)
+            navidromeStatus.value = e.message.toString()
         } finally {
             NavidromeManager.setSyncingStatus(false)
         }

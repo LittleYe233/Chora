@@ -2,13 +2,11 @@ package com.craftworks.music.providers.navidrome
 
 import android.util.Log
 import androidx.media3.common.MediaItem
+import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
 import com.craftworks.music.data.model.MediaData
 import com.craftworks.music.data.model.toMediaItem
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.jsonObject
 
 @Serializable
 @SerialName("starred")
@@ -24,14 +22,10 @@ fun parseNavidromeFavouritesJSON(
     navidromeUsername: String,
     navidromePassword: String
 ) : List<MediaItem> {
-    val jsonParser = Json { ignoreUnknownKeys = true }
-    val subsonicResponse = jsonParser.decodeFromJsonElement<SubsonicResponse>(
-        jsonParser.parseToJsonElement(response).jsonObject["subsonic-response"]!!
-    )
+    val subsonicResponse = parseSubsonicResponse(response)
 
-    val passwordSaltMedia = generateSalt(8)
-    val passwordHashMedia = md5Hash(navidromePassword + passwordSaltMedia)
-
+    val passwordSaltMedia = NavidromeDataSource.generateSalt(8)
+    val passwordHashMedia = NavidromeDataSource.md5Hash(navidromePassword + passwordSaltMedia)
 
     val mediaDataFavouriteSongs = mutableListOf<MediaItem>()
 
