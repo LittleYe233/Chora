@@ -17,6 +17,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,6 +61,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -398,9 +401,8 @@ fun TvSideNavigation(
         )
     ).value
 
-    // The drawer starts closed; it opens (expands labels) when the user
-    // focuses any item inside it with the D-pad.
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val mainContentFocusRequester = remember { FocusRequester() }
 
     NavigationDrawer(
         modifier = Modifier.fillMaxSize(),
@@ -409,7 +411,9 @@ fun TvSideNavigation(
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(vertical = 16.dp),
+                    .padding(vertical = 16.dp)
+                    .focusRestorer()
+                    .focusGroup(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 orderedNavItems.forEach { item ->
@@ -494,12 +498,9 @@ fun TvSideNavigation(
                     }
                 }
             }
-        }
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            content()
-        }
-    }
+        },
+        content = content
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

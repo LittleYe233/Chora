@@ -63,8 +63,13 @@ import com.craftworks.music.ui.screens.settings.S_PlaybackScreen
 import com.craftworks.music.ui.screens.settings.S_ProviderScreen
 import com.craftworks.music.ui.screens.tv.TvAlbumDetails
 import com.craftworks.music.ui.screens.tv.TvAlbumScreen
+import com.craftworks.music.ui.screens.tv.TvArtistDetailsScreen
 import com.craftworks.music.ui.screens.tv.TvArtistScreen
 import com.craftworks.music.ui.screens.tv.TvHomeScreen
+import com.craftworks.music.ui.screens.tv.TvPlaylistDetails
+import com.craftworks.music.ui.screens.tv.TvPlaylistScreen
+import com.craftworks.music.ui.screens.tv.TvRadioScreen
+import com.craftworks.music.ui.screens.tv.TvSongsScreen
 import com.craftworks.music.ui.viewmodels.AlbumScreenViewModel
 import com.craftworks.music.ui.viewmodels.ArtistsScreenViewModel
 import com.craftworks.music.ui.viewmodels.HomeScreenViewModel
@@ -159,14 +164,20 @@ fun SetupNavGraph(
                 navController.getBackStackEntry("main_graph")
             }
             val viewModel: SongsScreenViewModel = hiltViewModel(parentEntry)
-            SongsScreen(mediaController, viewModel)
+            if (isTv)
+                TvSongsScreen(mediaController, viewModel)
+            else
+                SongsScreen(mediaController, viewModel)
         }
         composable(route = Screen.Radio.route) { backStackEntry ->
             val parentEntry = remember(backStackEntry) {
                 navController.getBackStackEntry("main_graph")
             }
             val viewModel: RadioScreenViewModel = hiltViewModel(parentEntry)
-            RadioScreen(mediaController, viewModel)
+            if (isTv)
+                TvRadioScreen(mediaController, viewModel)
+            else
+                RadioScreen(mediaController, viewModel)
         }
 
         //Albums
@@ -214,6 +225,7 @@ fun SetupNavGraph(
                     navController.getBackStackEntry("main_graph")
                 }
                 val viewModel: ArtistsScreenViewModel = hiltViewModel(parentEntry)
+
                 if (isTv)
                     TvArtistScreen(navController, viewModel)
                 else
@@ -224,7 +236,11 @@ fun SetupNavGraph(
                     navController.getBackStackEntry("main_graph")
                 }
                 val viewModel: ArtistsScreenViewModel = hiltViewModel(parentEntry)
-                ArtistDetails(navController, mediaController, viewModel)
+
+                if (isTv)
+                    TvArtistDetailsScreen(navController, mediaController, viewModel)
+                else
+                    ArtistDetails(navController, mediaController, viewModel)
             }
         }
 
@@ -235,7 +251,11 @@ fun SetupNavGraph(
                     navController.getBackStackEntry("main_graph")
                 }
                 val viewModel: PlaylistScreenViewModel = hiltViewModel(parentEntry)
-                PlaylistScreen(navController, viewModel)
+
+                if (isTv)
+                    TvPlaylistScreen(navController, viewModel)
+                else
+                    PlaylistScreen(navController, viewModel)
             }
             composable(route = Screen.PlaylistDetails.route) { backStackEntry ->
                 val parentEntry = remember(backStackEntry) {
@@ -243,7 +263,10 @@ fun SetupNavGraph(
                 }
                 val viewModel: PlaylistScreenViewModel = hiltViewModel(parentEntry)
 
-                PlaylistDetails(navController, mediaController, viewModel)
+                if (isTv)
+                    TvPlaylistDetails(navController, mediaController, viewModel)
+                else
+                    PlaylistDetails(navController, mediaController, viewModel)
             }
         }
 

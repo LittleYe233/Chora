@@ -1,12 +1,9 @@
 package com.craftworks.music.ui.screens.tv
 
-import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,15 +19,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,13 +38,15 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.session.MediaController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import androidx.tv.material3.Button
 import androidx.tv.material3.ButtonDefaults
-import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
@@ -61,66 +55,47 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.craftworks.music.R
 import com.craftworks.music.formatMilliseconds
-import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.player.SongHelper
-import com.craftworks.music.ui.elements.GenrePill
-import com.craftworks.music.ui.elements.dialogs.AddSongToPlaylist
-import com.craftworks.music.ui.elements.dialogs.showAddSongToPlaylistDialog
+import com.craftworks.music.player.rememberManagedMediaController
 import com.craftworks.music.ui.elements.tv.TvHorizontalSongCard
-import com.craftworks.music.ui.viewmodels.AlbumDetailsViewModel
+import com.craftworks.music.ui.viewmodels.PlaylistScreenViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalTvMaterial3Api::class)
+
+@Preview(showBackground = true, showSystemUi = false)
 @Composable
-fun TvAlbumDetails(
-    selectedAlbumId: String = "",
-    selectedAlbumImage: Uri = Uri.EMPTY,
-    mediaController: MediaController? = null,
-    viewModel: AlbumDetailsViewModel = hiltViewModel()
+fun TvPlaylistDetails(
+    navHostController: NavHostController = rememberNavController(),
+    mediaController: MediaController? = rememberManagedMediaController().value,
+    viewModel: PlaylistScreenViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
-    val currentAlbum = viewModel.songsInAlbum.collectAsStateWithLifecycle().value
-    val showTrackNumbers by AppearanceSettingsManager(context)
-        .showTrackNumbersFlow.collectAsStateWithLifecycle(false)
+    val playlistMetadata =
+        viewModel.selectedPlaylist.collectAsStateWithLifecycle().value?.mediaMetadata
 
-    LaunchedEffect(selectedAlbumId) {
-        viewModel.loadAlbumDetails(selectedAlbumId)
-    }
+    val playlistSongs = viewModel.selectedPlaylistSongs.collectAsStateWithLifecycle().value
+    val isLoading = viewModel.isLoading.collectAsStateWithLifecycle().value
 
-    AnimatedVisibility(
-        visible = currentAlbum.isEmpty(),
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(64.dp),
-                color = MaterialTheme.colorScheme.primary,
-                strokeWidth = 6.dp
-            )
-        }
-    }
+    val playlistDuration =
+        remember(playlistSongs) { playlistSongs.sumOf { it.mediaMetadata.durationMs ?: 0 } }
+
+    val playRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) { playRequester.requestFocus() }
 
     AnimatedVisibility(
-        visible = currentAlbum.isNotEmpty(),
+        visible = !isLoading,
         enter = fadeIn()
     ) {
         val coroutineScope = rememberCoroutineScope()
         val playRequester = remember { FocusRequester() }
-
-        var isStarred by remember {
-            mutableStateOf(
-                currentAlbum[0].mediaMetadata.extras
-                    ?.getString("starred")?.isNotEmpty() ?: false
-            )
-        }
 
         LaunchedEffect(Unit) { playRequester.requestFocus() }
 
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 48.dp),
+                .padding(horizontal = 48.dp)
+                .focusGroup(),
             horizontalArrangement = Arrangement.spacedBy(48.dp)
         ) {
             Column(
@@ -135,25 +110,25 @@ fun TvAlbumDetails(
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(selectedAlbumImage)
-                        .diskCacheKey(selectedAlbumId)
+                        .data(playlistMetadata?.artworkUri)
+                        .diskCacheKey(playlistMetadata?.extras?.getString("navidromeID"))
                         .crossfade(true)
                         .build(),
                     placeholder = painterResource(R.drawable.placeholder),
                     fallback = painterResource(R.drawable.placeholder),
                     contentScale = ContentScale.Crop,
-                    contentDescription = currentAlbum[0].mediaMetadata.title?.toString(),
+                    contentDescription = null,
                     modifier = Modifier
                         .size(240.dp)
                         .clip(RoundedCornerShape(16.dp))
                 )
 
-                // Title
                 Column(
                     verticalArrangement = Arrangement.SpaceEvenly
                 ) {
+                    // Title
                     Text(
-                        text = currentAlbum[0].mediaMetadata.title?.toString() ?: "",
+                        text = playlistMetadata?.title?.toString() ?: "",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Bold,
@@ -163,33 +138,14 @@ fun TvAlbumDetails(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // Artist · duration
+                    // duration
                     Text(
-                        text = (currentAlbum[0].mediaMetadata.artist?.toString() ?: "") +
-                                " · " +
-                                formatMilliseconds(
-                                    currentAlbum[0].mediaMetadata.durationMs
-                                        ?.div(1000)?.toInt() ?: 0
-                                ),
+                        text = formatMilliseconds((playlistDuration / 1000).toInt()),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
-
-                    // Genre pills
-                    if (!currentAlbum[0].mediaMetadata.genre.isNullOrEmpty()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            currentAlbum[0].mediaMetadata.genre
-                                ?.split(",")
-                                ?.forEach { GenrePill(it.trim()) }
-                        }
-                    }
                 }
 
                 Column(
@@ -199,7 +155,7 @@ fun TvAlbumDetails(
                         onClick = {
                             coroutineScope.launch {
                                 SongHelper.play(
-                                    currentAlbum.subList(1, currentAlbum.size),
+                                    playlistSongs,
                                     0,
                                     mediaController
                                 )
@@ -223,9 +179,9 @@ fun TvAlbumDetails(
                         onClick = {
                             mediaController?.shuffleModeEnabled = true
                             coroutineScope.launch {
-                                val random = currentAlbum.subList(1, currentAlbum.size).indices.random()
+                                val random = playlistSongs.indices.random()
                                 SongHelper.play(
-                                    currentAlbum.subList(1, currentAlbum.size),
+                                    playlistSongs,
                                     random,
                                     mediaController
                                 )
@@ -245,65 +201,28 @@ fun TvAlbumDetails(
                 }
             }
 
-            val songs = currentAlbum.subList(1, currentAlbum.size)
-            val groupedSongs = songs.groupBy { it.mediaMetadata.discNumber }
-
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
+                    .focusRestorer()
                     .focusGroup(),
                 contentPadding = PaddingValues(vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                if (groupedSongs.size > 1) {
-                    groupedSongs.forEach { (discNumber, disc) ->
-                        item {
-                            Column {
-                                Text(
-                                    text = stringResource(R.string.Album_Disc_Number) +
-                                            discNumber.toString(),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(0.5f),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(8.dp)
-                                )
-                                HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.onSurface.copy(0.2f),
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                items(playlistSongs) { song ->
+                    TvHorizontalSongCard (
+                        song = song,
+                        showTrackNumber = false,
+                        onClick = {
+                            coroutineScope.launch {
+                                SongHelper.play(playlistSongs, playlistSongs.indexOf(song), mediaController)
                             }
                         }
-                        items(disc) { song ->
-                            TvHorizontalSongCard (
-                                song = song,
-                                showTrackNumber = showTrackNumbers,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        SongHelper.play(songs, songs.indexOf(song), mediaController)
-                                    }
-                                }
-                            )
-                        }
-                    }
-                } else {
-                    items(songs) { song ->
-                        TvHorizontalSongCard (
-                            song = song,
-                            showTrackNumber = showTrackNumbers,
-                            onClick = {
-                                coroutineScope.launch {
-                                    SongHelper.play(songs, songs.indexOf(song), mediaController)
-                                }
-                            }
-                        )
-                    }
+                    )
                 }
             }
         }
     }
 
-    if (showAddSongToPlaylistDialog.value)
-        AddSongToPlaylist(setShowDialog = { showAddSongToPlaylistDialog.value = it })
 }

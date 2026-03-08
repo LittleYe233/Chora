@@ -50,7 +50,6 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.session.MediaController
 import com.craftworks.music.R
 import com.craftworks.music.data.model.MediaData
-import com.craftworks.music.data.model.albumList
 import com.craftworks.music.data.model.songsList
 import com.craftworks.music.data.model.toAlbum
 import com.craftworks.music.managers.NavidromeManager
@@ -167,20 +166,20 @@ fun AlbumGrid(
     }
 
     if (NavidromeManager.checkActiveServers() && isSearch == false) {
-        LaunchedEffect(gridState) {
-            if (albumList.size % 50 != 0) return@LaunchedEffect
+        if (NavidromeManager.checkActiveServers()) {
+            LaunchedEffect(albums.size) {
+                if (albums.size % 50 != 0) return@LaunchedEffect
+                if (albums.size < 50) return@LaunchedEffect
 
-            snapshotFlow {
-                val lastVisibleItemIndex = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
-                val totalItemsCount = gridState.layoutInfo.totalItemsCount
-
-                lastVisibleItemIndex != null && totalItemsCount > 0 &&
-                        (totalItemsCount - lastVisibleItemIndex) <= 10
-            }
-                .filter { it }
-                .collect {
+                snapshotFlow {
+                    val lastVisible = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: return@snapshotFlow false
+                    val total = gridState.layoutInfo.totalItemsCount
+                    if (total < albums.size - 5) return@snapshotFlow false
+                    (total - lastVisible) <= 15
+                }.filter { it }.collect {
                     viewModel.getMoreAlbums(50)
                 }
+            }
         }
     }
 

@@ -1,6 +1,7 @@
 package com.craftworks.music.ui.elements.tv
 
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -10,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.tv.material3.Card
 import androidx.tv.material3.ExperimentalTvMaterial3Api
@@ -21,14 +23,12 @@ import com.craftworks.music.R
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-fun TvAlbumCard(
-    album: MediaItem,
+fun TvRadioCard(
+    radio: MediaItem,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
-    val albumTitle = album.mediaMetadata.title?.toString() ?: ""
-    val artistName = album.mediaMetadata.artist?.toString() ?: ""
-    val coverArtUrl = album.mediaMetadata.artworkUri
+    val radioName = radio.mediaMetadata.station?.toString() ?: ""
     StandardCardContainer(
         modifier = modifier.width(128.dp),
         imageCard = {
@@ -36,31 +36,22 @@ fun TvAlbumCard(
                 onClick = onClick, interactionSource = it, content = {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(coverArtUrl)
-                            .diskCacheKey(album.mediaMetadata.extras?.getString("navidromeID"))
-                            .crossfade(true)
-                            .build(),
+                            .data(("android.resource://com.craftworks.music/" + R.drawable.radioplaceholder).toUri())
+                            .crossfade(true).build(),
                         fallback = painterResource(R.drawable.placeholder),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxWidth().aspectRatio(1f)
                     )
                 }
             )
         },
         title = {
             Text(
-                text = albumTitle,
+                text = radioName,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(top = 8.dp)
-            )
-        },
-        subtitle = {
-            Text(
-                text = artistName,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
         },
     )

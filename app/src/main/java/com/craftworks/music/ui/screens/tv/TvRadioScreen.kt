@@ -9,25 +9,34 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import androidx.tv.material3.ExperimentalTvMaterial3Api
-import com.craftworks.music.data.model.Screen
-import com.craftworks.music.ui.elements.tv.TvArtistCard
-import com.craftworks.music.ui.viewmodels.ArtistsScreenViewModel
+import androidx.media3.session.MediaController
+import com.craftworks.music.player.SongHelper
+import com.craftworks.music.ui.elements.tv.TvRadioCard
+import com.craftworks.music.ui.viewmodels.RadioScreenViewModel
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalTvMaterial3Api::class)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun TvArtistScreen(
-    navHostController: NavHostController = rememberNavController(),
-    viewModel: ArtistsScreenViewModel = hiltViewModel(),
+fun TvRadioScreen(
+    mediaController: MediaController? = null,
+    viewModel: RadioScreenViewModel = hiltViewModel()
 ) {
-    val allArtistList by viewModel.allArtists.collectAsStateWithLifecycle()
+    val coroutineScope = rememberCoroutineScope()
+
+    var showRadioModifyDialog by remember { mutableStateOf(false) }
+    var showRadioAddDialog by remember { mutableStateOf(false) }
+
+    val radios by viewModel.radioStations.collectAsStateWithLifecycle()
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(5),
@@ -39,13 +48,16 @@ fun TvArtistScreen(
         horizontalArrangement = Arrangement.spacedBy(24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        items(allArtistList) { artist ->
-            TvArtistCard(
-                artist = artist,
+        items(radios) { radio ->
+            TvRadioCard (
+                radio = radio,
                 onClick = {
-                    viewModel.setSelectedArtist(artist)
-                    navHostController.navigate(Screen.ArtistDetails.route) {
-                        launchSingleTop = true
+                    coroutineScope.launch {
+                        SongHelper.play(
+                            listOf(radio),
+                            0,
+                            mediaController
+                        )
                     }
                 }
             )

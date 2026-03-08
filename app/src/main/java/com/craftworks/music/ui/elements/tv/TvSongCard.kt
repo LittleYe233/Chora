@@ -58,7 +58,7 @@ fun TvHorizontalSongCard(
                                     song.mediaMetadata.extras?.getString("navidromeID") ?: song.mediaId
                                 )
                                 .build(),
-                            contentDescription = "Album Image",
+                            contentDescription = null,
                             contentScale = ContentScale.FillHeight,
                             modifier = Modifier
                                 .size(52.dp)
