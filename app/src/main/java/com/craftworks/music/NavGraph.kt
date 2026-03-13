@@ -73,6 +73,7 @@ import com.craftworks.music.ui.screens.tv.TvSettingScreen
 import com.craftworks.music.ui.screens.tv.TvSongsScreen
 import com.craftworks.music.ui.screens.tv.settings.TvS_AppearanceScreen
 import com.craftworks.music.ui.screens.tv.settings.TvS_PlaybackScreen
+import com.craftworks.music.ui.screens.tv.settings.TvS_ProviderScreen
 import com.craftworks.music.ui.viewmodels.AlbumScreenViewModel
 import com.craftworks.music.ui.viewmodels.ArtistsScreenViewModel
 import com.craftworks.music.ui.viewmodels.HomeScreenViewModel
@@ -328,7 +329,10 @@ fun SetupNavGraph(
                     } + fadeOut(animationSpec)
                 }
             ) {
-                S_ProviderScreen(navController)
+                if (isTv)
+                    TvS_ProviderScreen()
+                else
+                    S_ProviderScreen(navController)
             }
             composable(
                 route = Screen.S_Playback.route,
