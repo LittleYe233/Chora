@@ -61,7 +61,6 @@ import com.craftworks.music.ui.screens.SongsScreen
 import com.craftworks.music.ui.screens.settings.S_AppearanceScreen
 import com.craftworks.music.ui.screens.settings.S_PlaybackScreen
 import com.craftworks.music.ui.screens.settings.S_ProviderScreen
-import com.craftworks.music.ui.screens.settings.TvS_AppearanceScreen
 import com.craftworks.music.ui.screens.tv.TvAlbumDetails
 import com.craftworks.music.ui.screens.tv.TvAlbumScreen
 import com.craftworks.music.ui.screens.tv.TvArtistDetailsScreen
@@ -72,6 +71,8 @@ import com.craftworks.music.ui.screens.tv.TvPlaylistScreen
 import com.craftworks.music.ui.screens.tv.TvRadioScreen
 import com.craftworks.music.ui.screens.tv.TvSettingScreen
 import com.craftworks.music.ui.screens.tv.TvSongsScreen
+import com.craftworks.music.ui.screens.tv.settings.TvS_AppearanceScreen
+import com.craftworks.music.ui.screens.tv.settings.TvS_PlaybackScreen
 import com.craftworks.music.ui.viewmodels.AlbumScreenViewModel
 import com.craftworks.music.ui.viewmodels.ArtistsScreenViewModel
 import com.craftworks.music.ui.viewmodels.HomeScreenViewModel
@@ -342,7 +343,10 @@ fun SetupNavGraph(
                     } + fadeOut(tween(300))
                 }
             ) {
-                S_PlaybackScreen(navController)
+                if (isTv)
+                    TvS_PlaybackScreen()
+                else
+                    S_PlaybackScreen(navController)
             }
         }
 

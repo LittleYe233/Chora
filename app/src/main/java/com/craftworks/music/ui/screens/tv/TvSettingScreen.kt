@@ -56,7 +56,7 @@ fun TvSettingScreen(
             R.drawable.s_a_palette,
             R.string.Settings_Header_Appearance,
             navHostController,
-            Modifier.focusRequester(focusRequester).onFocusChanged {
+            Modifier.onFocusChanged {
                 focusRequester.saveFocusedChild()
             }
         )
