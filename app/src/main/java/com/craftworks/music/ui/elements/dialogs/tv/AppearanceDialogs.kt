@@ -189,12 +189,14 @@ fun ThemeDialog(
                 }
             }
         },
-        labelProvider = { theme ->
+        label = { theme ->
+            stringResource(
             when (theme) {
-                AppearanceSettingsManager.Companion.AppTheme.DARK -> R.string.Theme_Dark
-                AppearanceSettingsManager.Companion.AppTheme.LIGHT -> R.string.Theme_Light
-                AppearanceSettingsManager.Companion.AppTheme.SYSTEM -> R.string.Theme_System
-            }
+                    AppearanceSettingsManager.Companion.AppTheme.DARK -> R.string.Theme_Dark
+                    AppearanceSettingsManager.Companion.AppTheme.LIGHT -> R.string.Theme_Light
+                    AppearanceSettingsManager.Companion.AppTheme.SYSTEM -> R.string.Theme_System
+                }
+            )
         }
     )
 }
@@ -217,12 +219,14 @@ fun BackgroundDialog(
         onOptionSelected = { option ->
             coroutineScope.launch { AppearanceSettingsManager(context).setBackgroundType(option) }
         },
-        labelProvider = { option ->
+        label = { option ->
+            stringResource(
             when (option) {
-                NowPlayingBackground.PLAIN -> R.string.Background_Plain
-                NowPlayingBackground.STATIC_BLUR -> R.string.Background_Blur
-                NowPlayingBackground.ANIMATED_BLUR -> R.string.Background_Anim
-            }
+                    NowPlayingBackground.PLAIN -> R.string.Background_Plain
+                    NowPlayingBackground.STATIC_BLUR -> R.string.Background_Blur
+                    NowPlayingBackground.ANIMATED_BLUR -> R.string.Background_Anim
+                }
+            )
         },
         helperText = { option ->
             if (option == NowPlayingBackground.ANIMATED_BLUR && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)
@@ -255,12 +259,14 @@ fun NowPlayingTitleAlignmentDialog(
                 )
             }
         },
-        labelProvider = { option ->
+        label = { option ->
+            stringResource(
             when (option) {
-                NowPlayingTitleAlignment.LEFT -> R.string.NowPlayingTitleAlignment_Left
-                NowPlayingTitleAlignment.CENTER -> R.string.NowPlayingTitleAlignment_Center
-                NowPlayingTitleAlignment.RIGHT -> R.string.NowPlayingTitleAlignment_Right
-            }
+                    NowPlayingTitleAlignment.LEFT -> R.string.NowPlayingTitleAlignment_Left
+                    NowPlayingTitleAlignment.CENTER -> R.string.NowPlayingTitleAlignment_Center
+                    NowPlayingTitleAlignment.RIGHT -> R.string.NowPlayingTitleAlignment_Right
+                }
+            )
         }
     )
 }
@@ -276,7 +282,7 @@ fun NavbarItemsDialog(setShowDialog: (Boolean) -> Unit) {
         setShowDialog = setShowDialog,
         titleRes = R.string.Setting_Navbar_Items,
         items = navItems,
-        labelProvider = { it.title },
+        label = { it.title },
         isEnabled = { it.enabled },
         onCheckedChange = { index, checked ->
             coroutineScope.launch {
@@ -319,7 +325,8 @@ fun HomeItemsDialog(setShowDialog: (Boolean) -> Unit) {
         mapOf(
             "recently_played" to R.string.recently_played,
             "recently_added" to R.string.recently_added,
-            "most_played" to R.string.most_played
+            "most_played" to R.string.most_played,
+            "random_songs" to R.string.random_songs
         )
     }
 
@@ -327,7 +334,7 @@ fun HomeItemsDialog(setShowDialog: (Boolean) -> Unit) {
         setShowDialog = setShowDialog,
         titleRes = R.string.Setting_Home_Items,
         items = homeItems,
-        labelProvider = { context.getString(titleMap[it.key] ?: R.string.recently_played) },
+        label = { stringResource(titleMap[it.key] ?: R.string.recently_played) },
         isEnabled = { it.enabled },
         onCheckedChange = { index, checked ->
             coroutineScope.launch {
@@ -353,124 +360,6 @@ fun HomeItemsDialog(setShowDialog: (Boolean) -> Unit) {
                         )
                     )
                 )
-            }
-        }
-    )
-}
-
-@Composable
-fun <T> GenericListDialog(
-    setShowDialog: (Boolean) -> Unit,
-    titleRes: Int,
-    options: List<T>,
-    selectedOption: T,
-    onOptionSelected: (T) -> Unit,
-    labelProvider: (T) -> Int,
-    helperText: (T) -> String = { "" }
-) {
-    AlertDialog(
-        onDismissRequest = { setShowDialog(false) },
-        containerColor = MaterialTheme.colorScheme.surface,
-        title = {
-            Text(
-                text = stringResource(titleRes),
-                color = MaterialTheme.colorScheme.onSurface,
-                style =  MaterialTheme.typography.titleLarge
-            )
-        },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                options.forEach { option ->
-                    val isSelected = option == selectedOption
-
-                    ListItem(
-                        selected = isSelected,
-                        headlineContent = {
-                            Text(stringResource(labelProvider(option)) + helperText(option))
-                        },
-                        trailingContent = {
-                            RadioButton(
-                                selected = isSelected,
-                                onClick = {
-                                    onOptionSelected(option)
-                                    setShowDialog(false)
-                                }
-                            )
-                        },
-                        onClick = {
-                            onOptionSelected(option)
-                            setShowDialog(false)
-                        },
-                    )
-                }
-            }
-        },
-        confirmButton = { }
-    )
-}
-
-@Composable
-fun <T> GenericCheckDialog(
-    setShowDialog: (Boolean) -> Unit,
-    titleRes: Int,
-    items: List<T>,
-    labelProvider: (T) -> String,
-    isEnabled: (T) -> Boolean,
-    onCheckedChange: (index: Int, checked: Boolean) -> Unit,
-    onReset: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = { setShowDialog(false) },
-        containerColor = MaterialTheme.colorScheme.surface,
-        title = {
-            Text(
-                text = stringResource(titleRes),
-                color = MaterialTheme.colorScheme.onSurface,
-                style =  MaterialTheme.typography.titleLarge
-            )
-        },
-        text = {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(items) { item ->
-                    val index = items.indexOf(item)
-
-                    ListItem(
-                        selected = false,
-                        onClick = { onCheckedChange(index, !isEnabled(item)) },
-                        onLongClick = {
-
-                        },
-                        headlineContent = {
-                            Text(
-                                text = labelProvider(item),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        },
-                        leadingContent = {
-                            Checkbox(
-                                checked = isEnabled(item),
-                                onCheckedChange = null
-                            )
-                        },
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            Button(onClick = { setShowDialog(false) }) {
-                Text(stringResource(R.string.Action_Done))
-            }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = {
-                onReset()
-                setShowDialog(false)
-            }) {
-                Text(stringResource(R.string.Action_Reset))
             }
         }
     )

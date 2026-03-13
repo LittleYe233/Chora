@@ -32,6 +32,8 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.craftworks.music.R
 import com.craftworks.music.managers.settings.PlaybackSettingsManager
+import com.craftworks.music.ui.elements.dialogs.tv.TranscodingBitrateDialog
+import com.craftworks.music.ui.elements.dialogs.tv.TranscodingFormatDialog
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -140,4 +142,14 @@ fun TvS_PlaybackScreen() {
             }
         }
     }
+
+    if (showWifiTranscodingDialog) TranscodingBitrateDialog(setShowDialog = {
+        showWifiTranscodingDialog = it
+    }, true)
+    if (showDataTranscodingDialog) TranscodingBitrateDialog(setShowDialog = {
+        showDataTranscodingDialog = it
+    }, false)
+    if (showTranscodingFormatDialog) TranscodingFormatDialog(setShowDialog = {
+        showTranscodingFormatDialog = it
+    })
 }
