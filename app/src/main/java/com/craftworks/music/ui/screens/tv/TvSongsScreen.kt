@@ -9,10 +9,14 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,6 +40,12 @@ fun TvSongsScreen(
     val coroutineScope = rememberCoroutineScope()
     val gridState = rememberLazyGridState()
 
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit, songs) {
+        focusRequester.requestFocus()
+    }
+
     if (NavidromeManager.checkActiveServers()) {
         LaunchedEffect(songs.size) {
             if (songs.size % 50 != 0) return@LaunchedEffect
@@ -58,7 +68,8 @@ fun TvSongsScreen(
         modifier = Modifier
             .fillMaxSize()
             .focusGroup()
-            .focusRestorer(),
+            .focusRequester(focusRequester)
+            .focusRestorer(focusRequester),
         contentPadding = PaddingValues(horizontal = 48.dp, vertical = 24.dp),
         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(20.dp),
         verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(24.dp),
@@ -66,6 +77,9 @@ fun TvSongsScreen(
         itemsIndexed(songs) { index, song ->
             TvHorizontalSongCard(
                 song = song,
+                modifier = Modifier.onFocusChanged {
+                    focusRequester.saveFocusedChild()
+                },
                 onClick = {
                     coroutineScope.launch {
                         SongHelper.play(songs, index, mediaController)

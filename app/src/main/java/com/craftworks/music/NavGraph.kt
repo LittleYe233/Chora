@@ -61,6 +61,7 @@ import com.craftworks.music.ui.screens.SongsScreen
 import com.craftworks.music.ui.screens.settings.S_AppearanceScreen
 import com.craftworks.music.ui.screens.settings.S_PlaybackScreen
 import com.craftworks.music.ui.screens.settings.S_ProviderScreen
+import com.craftworks.music.ui.screens.settings.TvS_AppearanceScreen
 import com.craftworks.music.ui.screens.tv.TvAlbumDetails
 import com.craftworks.music.ui.screens.tv.TvAlbumScreen
 import com.craftworks.music.ui.screens.tv.TvArtistDetailsScreen
@@ -69,6 +70,7 @@ import com.craftworks.music.ui.screens.tv.TvHomeScreen
 import com.craftworks.music.ui.screens.tv.TvPlaylistDetails
 import com.craftworks.music.ui.screens.tv.TvPlaylistScreen
 import com.craftworks.music.ui.screens.tv.TvRadioScreen
+import com.craftworks.music.ui.screens.tv.TvSettingScreen
 import com.craftworks.music.ui.screens.tv.TvSongsScreen
 import com.craftworks.music.ui.viewmodels.AlbumScreenViewModel
 import com.craftworks.music.ui.viewmodels.ArtistsScreenViewModel
@@ -103,6 +105,8 @@ fun SetupNavGraph(
 
     val animationSpec = MaterialTheme.LocalMotionScheme.current.slowSpatialSpec<Float>()
 
+
+
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route,
@@ -128,7 +132,9 @@ fun SetupNavGraph(
             }
             val viewModel: HomeScreenViewModel = hiltViewModel(parentEntry)
             if (isTv)
-                TvHomeScreen(navController, mediaController, viewModel)
+                TvSideNavigation(navController) {
+                    TvHomeScreen(navController, mediaController, viewModel)
+                }
             else
                 HomeScreen(navController, mediaController, viewModel)
         }
@@ -165,7 +171,9 @@ fun SetupNavGraph(
             }
             val viewModel: SongsScreenViewModel = hiltViewModel(parentEntry)
             if (isTv)
-                TvSongsScreen(mediaController, viewModel)
+                TvSideNavigation(navController) {
+                    TvSongsScreen(mediaController, viewModel)
+                }
             else
                 SongsScreen(mediaController, viewModel)
         }
@@ -175,7 +183,9 @@ fun SetupNavGraph(
             }
             val viewModel: RadioScreenViewModel = hiltViewModel(parentEntry)
             if (isTv)
-                TvRadioScreen(mediaController, viewModel)
+                TvSideNavigation(navController) {
+                    TvRadioScreen(mediaController, viewModel)
+                }
             else
                 RadioScreen(mediaController, viewModel)
         }
@@ -187,7 +197,9 @@ fun SetupNavGraph(
             }
             val viewModel: AlbumScreenViewModel = hiltViewModel(parentEntry)
             if (isTv)
-                TvAlbumScreen(navController, viewModel)
+                TvSideNavigation(navController) {
+                    TvAlbumScreen(navController, viewModel)
+                }
             else
                 AlbumScreen(navController, mediaController, viewModel)
         }
@@ -227,7 +239,9 @@ fun SetupNavGraph(
                 val viewModel: ArtistsScreenViewModel = hiltViewModel(parentEntry)
 
                 if (isTv)
-                    TvArtistScreen(navController, viewModel)
+                    TvSideNavigation(navController) {
+                        TvArtistScreen(navController, viewModel)
+                    }
                 else
                     ArtistsScreen(navController, viewModel)
             }
@@ -253,7 +267,9 @@ fun SetupNavGraph(
                 val viewModel: PlaylistScreenViewModel = hiltViewModel(parentEntry)
 
                 if (isTv)
-                    TvPlaylistScreen(navController, viewModel)
+                    TvSideNavigation(navController) {
+                        TvPlaylistScreen(navController, viewModel)
+                    }
                 else
                     PlaylistScreen(navController, viewModel)
             }
@@ -273,7 +289,12 @@ fun SetupNavGraph(
         //Settings
         navigation(startDestination = Screen.Setting.route, route = "settings_graph") {
             composable(route = Screen.Setting.route) {
-                SettingScreen(navController)
+                if (isTv)
+                    TvSideNavigation(navController) {
+                        TvSettingScreen(navController)
+                    }
+                else
+                    SettingScreen(navController)
             }
             composable(
                 route = Screen.S_Appearance.route,
@@ -288,7 +309,10 @@ fun SetupNavGraph(
                     } + fadeOut(animationSpec)
                 }
             ) {
-                S_AppearanceScreen(navController)
+                if (isTv)
+                    TvS_AppearanceScreen()
+                else
+                    S_AppearanceScreen(navController)
             }
             composable(
                 route = Screen.S_Providers.route,

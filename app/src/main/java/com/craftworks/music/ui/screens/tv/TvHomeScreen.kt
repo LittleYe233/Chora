@@ -39,6 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component1
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component2
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
@@ -117,13 +119,23 @@ fun TvHomeScreen(
         )
     }
 
+
+    val (focusRequester, selectedRow) = remember {
+        FocusRequester.createRefs()
+    }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(vertical = 24.dp)
-            .focusRestorer()
-            .focusGroup(),
+            .focusGroup()
+            .focusRequester(focusRequester)
+            .focusRestorer(focusRequester),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         /*
@@ -236,9 +248,10 @@ private fun TvHomeAlbumRow(
     albums: List<MediaItem>,
     navHostController: NavHostController,
 ) {
+    val focus = remember { FocusRequester() }
+
     Column(modifier = Modifier
         .padding(bottom = 24.dp)
-        .focusGroup()
     ) {
         Text(
             text = title,
@@ -252,12 +265,18 @@ private fun TvHomeAlbumRow(
             contentPadding = PaddingValues(start = 12.dp, end = 48.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
-                .focusRestorer(),
+                .focusRequester(focus)
+                .focusRestorer()
+                .focusGroup(),
         ) {
             items(albums) { album ->
                 TvAlbumCard(
                     album = album,
-                    modifier = Modifier.padding(end = 16.dp),
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .onFocusChanged {
+                            focus.saveFocusedChild()
+                        },
                     onClick = {
                         val albumEncoded = album.toAlbum()
                         val encodedImage = URLEncoder.encode(albumEncoded.coverArt, "UTF-8")

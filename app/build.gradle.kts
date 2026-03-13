@@ -3,8 +3,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
     kotlin("plugin.serialization") version "2.0.0"
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.hilt)
-    kotlin("kapt")
+    id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -39,7 +39,7 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
         debug {
-            isDebuggable = false
+            isDebuggable = true
             isProfileable = true
         }
     }
@@ -110,7 +110,7 @@ dependencies {
 
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
 
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)

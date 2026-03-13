@@ -8,12 +8,15 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,12 +41,19 @@ fun TvRadioScreen(
 
     val radios by viewModel.radioStations.collectAsStateWithLifecycle()
 
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit, radios) {
+        focusRequester.requestFocus()
+    }
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(5),
         modifier = Modifier
             .fillMaxSize()
             .focusGroup()
-            .focusRestorer(),
+            .focusRequester(focusRequester)
+            .focusRestorer(focusRequester),
         contentPadding = PaddingValues(horizontal = 48.dp, vertical = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),

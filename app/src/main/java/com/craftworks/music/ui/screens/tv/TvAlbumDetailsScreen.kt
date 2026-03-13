@@ -251,8 +251,8 @@ fun TvAlbumDetails(
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxHeight()
-                    .focusGroup(),
+                    .focusGroup()
+                    .fillMaxHeight(),
                 contentPadding = PaddingValues(vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {

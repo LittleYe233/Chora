@@ -103,8 +103,7 @@ fun TvPlaylistDetails(
                     .width(260.dp)
                     .fillMaxHeight()
                     .padding(vertical = 24.dp)
-                    .focusRestorer()
-                    .focusGroup(),
+                    .focusRestorer(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
@@ -205,8 +204,8 @@ fun TvPlaylistDetails(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .focusRestorer()
-                    .focusGroup(),
+                    .focusGroup()
+                    .focusRestorer(),
                 contentPadding = PaddingValues(vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {

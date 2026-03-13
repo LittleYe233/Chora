@@ -12,14 +12,16 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -48,12 +50,30 @@ fun TvAlbumScreen(
 ) {
     val albums by viewModel.allAlbums.collectAsStateWithLifecycle()
     val tabs = listOf(
+        stringResource(R.string.Label_Sort_Alphabetical),
         stringResource(R.string.recently_added),
         stringResource(R.string.recently_played),
         stringResource(R.string.most_played),
         stringResource(R.string.Label_Sort_Starred),
     )
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    val sortOrder by viewModel.sortOrder.collectAsStateWithLifecycle()
+    val selectedTabIndex by remember(sortOrder) {
+        derivedStateOf {
+            when (sortOrder) {
+                SortOrder.ALPHABETICAL -> 0
+                SortOrder.NEWEST -> 1
+                SortOrder.RECENT -> 2
+                SortOrder.FREQUENT -> 3
+                SortOrder.STARRED -> 4
+            }
+        }
+    }
+    val tabFocusRequester = remember { FocusRequester() }
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
     val gridState = rememberLazyGridState()
 
@@ -63,7 +83,8 @@ fun TvAlbumScreen(
             if (albums.size < 50) return@LaunchedEffect
 
             snapshotFlow {
-                val lastVisible = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: return@snapshotFlow false
+                val lastVisible = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
+                    ?: return@snapshotFlow false
                 val total = gridState.layoutInfo.totalItemsCount
                 if (total < albums.size - 5) return@snapshotFlow false
                 (total - lastVisible) <= 15
@@ -79,7 +100,8 @@ fun TvAlbumScreen(
         modifier = Modifier
             .fillMaxSize()
             .focusGroup()
-            .focusRestorer(),
+            .focusRequester(focusRequester)
+            .focusRestorer(focusRequester),
         contentPadding = PaddingValues(horizontal = 48.dp, vertical = 24.dp),
         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(20.dp),
         verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(24.dp),
@@ -89,7 +111,7 @@ fun TvAlbumScreen(
                 selectedTabIndex = selectedTabIndex,
                 modifier = Modifier
                     .focusGroup()
-                    .focusRestorer()
+                    .focusRestorer(tabFocusRequester)
                     .fillMaxWidth()
             ) {
                 tabs.forEachIndexed { index, tab ->
@@ -97,16 +119,20 @@ fun TvAlbumScreen(
                         Tab(
                             selected = index == selectedTabIndex,
                             onFocus = {
-                                selectedTabIndex = index
                                 viewModel.setSorting(
                                     when (index) {
-                                        0 -> SortOrder.NEWEST
-                                        1 -> SortOrder.RECENT
-                                        2 -> SortOrder.FREQUENT
+                                        0 -> SortOrder.ALPHABETICAL
+                                        1 -> SortOrder.NEWEST
+                                        2 -> SortOrder.RECENT
+                                        3 -> SortOrder.FREQUENT
                                         else -> SortOrder.STARRED
                                     }
                                 )
-                                      },
+                            },
+                            modifier = if (index == selectedTabIndex)
+                                Modifier.focusRequester(tabFocusRequester)
+                            else
+                                Modifier
                         ) {
                             Text(
                                 text = tab,
@@ -120,7 +146,11 @@ fun TvAlbumScreen(
         items(albums) { album ->
             TvAlbumCard(
                 album = album,
+                modifier = Modifier.onFocusChanged {
+                    focusRequester.saveFocusedChild()
+                },
                 onClick = {
+                    //focusRequester.saveFocusedChild()
                     val albumEncoded = album.toAlbum()
                     val encodedImage = URLEncoder.encode(albumEncoded.coverArt, "UTF-8")
                     navHostController.navigate(Screen.AlbumDetails.route + "/${albumEncoded.navidromeID}/$encodedImage") {

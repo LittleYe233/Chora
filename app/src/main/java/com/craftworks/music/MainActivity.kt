@@ -59,9 +59,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component1
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component2
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component3
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component4
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component5
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component6
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component7
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
@@ -80,6 +90,7 @@ import androidx.compose.ui.unit.dp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -92,7 +103,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.tv.material3.DrawerValue
 import androidx.tv.material3.NavigationDrawer
 import androidx.tv.material3.NavigationDrawerItem
-import androidx.tv.material3.NavigationDrawerItemDefaults
 import androidx.tv.material3.rememberDrawerState
 import com.craftworks.music.data.BottomNavItem
 import com.craftworks.music.data.model.Screen
@@ -181,16 +191,6 @@ class MainActivity : ComponentActivity() {
                     label = "sheetPeekAnimation"
                 )
 
-                val backCallback = object : OnBackPressedCallback(false) {
-                    override fun handleOnBackPressed() {
-                        coroutineScope.launch {
-                            scaffoldState.bottomSheetState.partialExpand()
-                        }
-                    }
-                }
-
-                onBackPressedDispatcher.addCallback(this, backCallback)
-
                 val isTv = LocalConfiguration.current.uiMode and
                         Configuration.UI_MODE_TYPE_MASK == Configuration.UI_MODE_TYPE_TELEVISION
 
@@ -199,18 +199,36 @@ class MainActivity : ComponentActivity() {
                     window.decorView.setBackgroundColor(
                         androidx.tv.material3.MaterialTheme.colorScheme.background.toArgb()
                     )
-                    TvSideNavigation(navController = navController) {
+                    /*
+                    TvSideNavigation(
+                        navController = navController
+                    ) {
                         SetupNavGraph(
                             navController = navController,
                             bottomPadding = 0.dp,
                             mediaController = mediaController
                         )
                     }
+                    */
+                    SetupNavGraph(
+                        navController = navController,
+                        bottomPadding = 0.dp,
+                        mediaController = mediaController
+                    )
                 } else {
                     // Set background color to colorScheme.background
                     window.decorView.setBackgroundColor(
                         MaterialTheme.colorScheme.background.toArgb()
                     )
+                    val backCallback = object : OnBackPressedCallback(false) {
+                        override fun handleOnBackPressed() {
+                            coroutineScope.launch {
+                                scaffoldState.bottomSheetState.partialExpand()
+                            }
+                        }
+                    }
+
+                    onBackPressedDispatcher.addCallback(this, backCallback)
                     Scaffold(
                         bottomBar = {
                             AnimatedBottomNavBar(navController, scaffoldState)
@@ -362,6 +380,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun TvSideNavigation(
     navController: NavHostController,
@@ -369,6 +388,10 @@ fun TvSideNavigation(
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val context = LocalContext.current
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+
+    val (home, albums, songs, artists, radios, playlists, settings) = remember { FocusRequester.createRefs() }
+    val currentRoute by navController.currentBackStackEntryFlow.collectAsStateWithLifecycle(initialValue = null)
 
     val orderedNavItems = AppearanceSettingsManager(context).bottomNavItemsFlow.collectAsState(
         initial = listOf(
@@ -401,35 +424,61 @@ fun TvSideNavigation(
         )
     ).value
 
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val mainContentFocusRequester = remember { FocusRequester() }
-
     NavigationDrawer(
         modifier = Modifier.fillMaxSize(),
         drawerState = drawerState,
         drawerContent = {
+            val isClosed = it == DrawerValue.Closed
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(vertical = 16.dp)
-                    .focusRestorer()
+                    .padding(vertical = 24.dp)
+                    .focusProperties {
+                        enter = {
+                            when (currentRoute) {
+                                Screen.Home -> home
+                                Screen.Albums -> albums
+                                Screen.Song -> songs
+                                Screen.Artists -> artists
+                                Screen.Radio -> radios
+                                Screen.Playlists -> playlists
+                                Screen.Setting -> settings
+                                else -> FocusRequester.Default
+                            }
+                        }
+                    }
                     .focusGroup(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 orderedNavItems.forEach { item ->
                     if (!item.enabled) return@forEach
 
-                    val isSelected =
-                        item.screenRoute == backStackEntry?.destination?.route
+                    val isSelected = isClosed &&  item.screenRoute == backStackEntry?.destination?.route
 
                     NavigationDrawerItem(
-                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+                        modifier = Modifier
+                            .padding(vertical = 4.dp, horizontal = 8.dp)
+                            .focusRequester(
+                                when (item.screenRoute) {
+                                    Screen.Home.route -> home
+                                    Screen.Albums.route -> albums
+                                    Screen.Song.route -> songs
+                                    Screen.Artists.route -> artists
+                                    Screen.Radio.route -> radios
+                                    Screen.Playlists.route -> playlists
+                                    Screen.Setting.route -> settings
+                                    else -> FocusRequester.Default
+                                }
+                            ),
                         selected = isSelected,
                         onClick = {
                             if (!isSelected) {
                                 navController.navigate(item.screenRoute) {
                                     launchSingleTop = true
                                     restoreState = true
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        saveState = true
+                                    }
                                 }
                             }
                         },
@@ -479,13 +528,32 @@ fun TvSideNavigation(
                         modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
                         selected = false,
                         onClick = {
+                            navController.navigate(Screen.Setting.route) {
+                                launchSingleTop = true
+                            }
+                        },
+                        leadingContent = {
+                            androidx.tv.material3.Icon(
+                                imageVector = ImageVector.vectorResource(R.drawable.rounded_settings_24),
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    ) {
+                        androidx.tv.material3.Text(text = stringResource(R.string.settings))
+                    }
+                    /*
+                    NavigationDrawerItem(
+                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+                        selected = false,
+                        onClick = {
                             (context as Activity).finish()
                             exitProcess(0)
                         },
                         leadingContent = {
                             androidx.tv.material3.Icon(
                                 imageVector = ImageVector.vectorResource(R.drawable.round_power_settings_new_24),
-                                contentDescription = stringResource(R.string.Action_Exit),
+                                contentDescription = null,
                                 modifier = Modifier.size(24.dp)
                             )
                         },
@@ -496,10 +564,18 @@ fun TvSideNavigation(
                     ) {
                         androidx.tv.material3.Text(text = stringResource(R.string.Action_Exit))
                     }
+                    */
                 }
             }
         },
-        content = content
+        content = {
+            Box(Modifier
+                .focusRestorer()
+                .focusGroup()
+            ) {
+                content()
+            }
+        }
     )
 }
 

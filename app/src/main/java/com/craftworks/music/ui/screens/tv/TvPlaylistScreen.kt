@@ -9,12 +9,15 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,12 +50,19 @@ fun TvPlaylistScreen(
     )
     var selectedTabIndex by remember { mutableIntStateOf(0) }
 
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit, playlists) {
+        focusRequester.requestFocus()
+    }
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(5),
         modifier = Modifier
             .fillMaxSize()
             .focusGroup()
-            .focusRestorer(),
+            .focusRequester(focusRequester)
+            .focusRestorer(focusRequester),
         contentPadding = PaddingValues(horizontal = 48.dp, vertical = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
