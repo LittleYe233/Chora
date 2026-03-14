@@ -21,7 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.session.MediaController
+import androidx.navigation.NavController
 import androidx.tv.material3.ExperimentalTvMaterial3Api
+import com.craftworks.music.data.model.Screen
 import com.craftworks.music.managers.NavidromeManager
 import com.craftworks.music.player.SongHelper
 import com.craftworks.music.ui.elements.tv.TvHorizontalSongCard
@@ -33,6 +35,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TvSongsScreen(
     mediaController: MediaController? = null,
+    navHostController: NavController,
     viewModel: SongsScreenViewModel = hiltViewModel(),
 ) {
     val songs by viewModel.allSongs.collectAsStateWithLifecycle()
@@ -83,6 +86,9 @@ fun TvSongsScreen(
                 onClick = {
                     coroutineScope.launch {
                         SongHelper.play(songs, index, mediaController)
+                        navHostController.navigate(Screen.NowPlayingLandscape.route) {
+                            launchSingleTop = true
+                        }
                     }
                 }
             )

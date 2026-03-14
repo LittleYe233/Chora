@@ -50,6 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.session.MediaController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import androidx.tv.material3.Button
 import androidx.tv.material3.ButtonDefaults
 import androidx.tv.material3.ExperimentalTvMaterial3Api
@@ -60,6 +62,7 @@ import androidx.tv.material3.Text
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.craftworks.music.R
+import com.craftworks.music.data.model.Screen
 import com.craftworks.music.formatMilliseconds
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.player.SongHelper
@@ -76,6 +79,7 @@ fun TvAlbumDetails(
     selectedAlbumId: String = "",
     selectedAlbumImage: Uri = Uri.EMPTY,
     mediaController: MediaController? = null,
+    navHostController: NavHostController = rememberNavController(),
     viewModel: AlbumDetailsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -203,6 +207,9 @@ fun TvAlbumDetails(
                                     0,
                                     mediaController
                                 )
+                                navHostController.navigate(Screen.NowPlayingLandscape.route) {
+                                    launchSingleTop = true
+                                }
                             }
                         },
                         modifier = Modifier
@@ -229,6 +236,9 @@ fun TvAlbumDetails(
                                     random,
                                     mediaController
                                 )
+                                navHostController.navigate(Screen.NowPlayingLandscape.route) {
+                                    launchSingleTop = true
+                                }
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -282,6 +292,9 @@ fun TvAlbumDetails(
                                 onClick = {
                                     coroutineScope.launch {
                                         SongHelper.play(songs, songs.indexOf(song), mediaController)
+                                        navHostController.navigate(Screen.NowPlayingLandscape.route) {
+                                            launchSingleTop = true
+                                        }
                                     }
                                 }
                             )
@@ -295,6 +308,9 @@ fun TvAlbumDetails(
                             onClick = {
                                 coroutineScope.launch {
                                     SongHelper.play(songs, songs.indexOf(song), mediaController)
+                                    navHostController.navigate(Screen.NowPlayingLandscape.route) {
+                                        launchSingleTop = true
+                                    }
                                 }
                             }
                         )

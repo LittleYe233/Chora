@@ -174,7 +174,7 @@ fun SetupNavGraph(
             val viewModel: SongsScreenViewModel = hiltViewModel(parentEntry)
             if (isTv)
                 TvSideNavigation(navController) {
-                    TvSongsScreen(mediaController, viewModel)
+                    TvSongsScreen(mediaController, navController, viewModel)
                 }
             else
                 SongsScreen(mediaController, viewModel)
@@ -186,7 +186,7 @@ fun SetupNavGraph(
             val viewModel: RadioScreenViewModel = hiltViewModel(parentEntry)
             if (isTv)
                 TvSideNavigation(navController) {
-                    TvRadioScreen(mediaController, viewModel)
+                    TvRadioScreen(mediaController, navController, viewModel)
                 }
             else
                 RadioScreen(mediaController, viewModel)
@@ -223,6 +223,7 @@ fun SetupNavGraph(
                     albumId,
                     albumImageUri.toUri(),
                     mediaController,
+                    navController
                 )
             else
                 AlbumDetails(

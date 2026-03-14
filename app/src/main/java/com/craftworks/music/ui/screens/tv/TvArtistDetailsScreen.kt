@@ -175,6 +175,9 @@ fun TvArtistDetailsScreen(
                                             0,
                                             mediaController
                                         )
+                                        navHostController.navigate(Screen.NowPlayingLandscape.route) {
+                                            launchSingleTop = true
+                                        }
                                     }
                                 },
                                 modifier = Modifier
@@ -212,6 +215,9 @@ fun TvArtistDetailsScreen(
                                             random,
                                             mediaController
                                         )
+                                        navHostController.navigate(Screen.NowPlayingLandscape.route) {
+                                            launchSingleTop = true
+                                        }
                                     }
                                 },
                                 modifier = Modifier

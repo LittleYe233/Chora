@@ -54,6 +54,7 @@ import androidx.tv.material3.Text
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.craftworks.music.R
+import com.craftworks.music.data.model.Screen
 import com.craftworks.music.formatMilliseconds
 import com.craftworks.music.player.SongHelper
 import com.craftworks.music.player.rememberManagedMediaController
@@ -158,6 +159,9 @@ fun TvPlaylistDetails(
                                     0,
                                     mediaController
                                 )
+                                navHostController.navigate(Screen.NowPlayingLandscape.route) {
+                                    launchSingleTop = true
+                                }
                             }
                         },
                         modifier = Modifier
@@ -184,6 +188,9 @@ fun TvPlaylistDetails(
                                     random,
                                     mediaController
                                 )
+                                navHostController.navigate(Screen.NowPlayingLandscape.route) {
+                                    launchSingleTop = true
+                                }
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -216,6 +223,9 @@ fun TvPlaylistDetails(
                         onClick = {
                             coroutineScope.launch {
                                 SongHelper.play(playlistSongs, playlistSongs.indexOf(song), mediaController)
+                                navHostController.navigate(Screen.NowPlayingLandscape.route) {
+                                    launchSingleTop = true
+                                }
                             }
                         }
                     )

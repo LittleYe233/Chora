@@ -214,11 +214,11 @@ fun TvNowPlaying(
 
         var topPadding = 0.dp
         if ((metadata?.title?.length ?: 0) > 25)
-            topPadding += 32.dp
-        if (((metadata?.artist?.length ?: 0) + 4) > 25)
-            topPadding += 32.dp
-        if ((metadata?.artist?.length ?: 0) > 25)
-            topPadding += 32.dp
+            topPadding = 32.dp
+        if (((metadata?.albumTitle?.length ?: 0) + 4) > 20)
+            topPadding = 64.dp
+        if ((metadata?.artist?.length ?: 0) > 40)
+            topPadding = 96.dp
 
         if (metadata?.mediaType != MediaMetadata.MEDIA_TYPE_RADIO_STATION
             && lyrics.isNotEmpty()

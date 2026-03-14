@@ -23,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.session.MediaController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.craftworks.music.data.model.Screen
 import com.craftworks.music.player.SongHelper
 import com.craftworks.music.ui.elements.tv.TvRadioCard
 import com.craftworks.music.ui.viewmodels.RadioScreenViewModel
@@ -32,6 +35,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TvRadioScreen(
     mediaController: MediaController? = null,
+    navHostController: NavHostController = rememberNavController(),
     viewModel: RadioScreenViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -68,6 +72,9 @@ fun TvRadioScreen(
                             0,
                             mediaController
                         )
+                        navHostController.navigate(Screen.NowPlayingLandscape.route) {
+                            launchSingleTop = true
+                        }
                     }
                 }
             )

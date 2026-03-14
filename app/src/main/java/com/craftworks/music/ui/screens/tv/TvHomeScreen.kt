@@ -177,6 +177,9 @@ fun TvHomeScreen(
                                     index = 0,
                                     mediaController = mediaController
                                 )
+                            navHostController.navigate(Screen.NowPlayingLandscape.route) {
+                                launchSingleTop = true
+                            }
                         }
                     }
                 )
