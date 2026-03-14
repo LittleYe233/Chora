@@ -55,7 +55,7 @@ fun StaticBlurBackground(
                                 animatedColors.elementAtOrNull(1) ?: animatedColors.firstNotNullOf { it },
                                 Color.Transparent
                             ),
-                            center = Offset(0f, size.height),
+                            center = Offset(size.width / 5, size.height),
                             radius = size.height
                         )
                     )

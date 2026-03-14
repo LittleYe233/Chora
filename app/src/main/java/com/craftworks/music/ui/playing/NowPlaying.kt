@@ -3,6 +3,7 @@ package com.craftworks.music.ui.playing
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
+import android.util.Log
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -34,6 +35,7 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
+import com.craftworks.music.ui.screens.tv.TvNowPlaying
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
@@ -62,15 +64,18 @@ fun NowPlayingContent(
     }
     var iconTextColor by remember { mutableStateOf<Color>(Color.White) }
 
-    backgroundDarkMode = isSystemInDarkTheme()
+    if (backgroundStyle == NowPlayingBackground.PLAIN)
+        backgroundDarkMode = isSystemInDarkTheme()
 
     LaunchedEffect(metadata?.artworkUri) {
         if (metadata?.artworkUri != null && backgroundStyle != NowPlayingBackground.PLAIN) {
-            colors = extractColorsFromUri(metadata.artworkUri.toString(), context)
+            val palette = extractColorsFromUri(metadata.artworkUri.toString(), context)
 
             backgroundDarkMode =
-                (colors.elementAtOrNull(2) ?: Color.Black).customLuminance() <= 0.8f
-            println("Generated new colors for song ${metadata.artworkUri}! Luminance: ${colors.elementAtOrNull(2)?.customLuminance()}")
+                (palette.elementAtOrNull(2) ?: palette.elementAtOrNull(4) ?: Color.Black).customLuminance() <= 0.8f
+
+            colors = palette.filterNotNull()
+            println("Generated new colors for song ${metadata.title}! Luminance: ${ (palette.elementAtOrNull(2) ?: palette.elementAtOrNull(4) ?: Color.Black).customLuminance()} | darkmode: $backgroundDarkMode")
         }
         iconTextColor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (backgroundDarkMode) dynamicDarkColorScheme(context).onBackground
@@ -89,12 +94,14 @@ fun NowPlayingContent(
 
     NowPlaying_Background(colors, backgroundStyle, targetOverlayColor)
 
-    if ((LocalConfiguration.current.uiMode and Configuration.UI_MODE_TYPE_MASK == Configuration.UI_MODE_TYPE_TELEVISION) ||
-        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+    if (LocalConfiguration.current.uiMode and Configuration.UI_MODE_TYPE_MASK == Configuration.UI_MODE_TYPE_TELEVISION) {
+        TvNowPlaying(mediaController, iconTextColor, metadata)
+    } else if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) {
         NowPlayingLandscape(mediaController, iconTextColor, metadata)
     } else {
         NowPlayingPortrait(mediaController, iconTextColor, metadata)
     }
+
 
     // Play Queue
     val playQueueSheetState = rememberModalBottomSheetState(
@@ -120,7 +127,7 @@ fun Color.customLuminance(): Float {
     return 0.2126f * red + 0.7152f * green + 0.0722f * blue
 }
 
-suspend fun extractColorsFromUri(uri: String, context: Context): List<Color> = coroutineScope {
+suspend fun extractColorsFromUri(uri: String, context: Context): List<Color?> = coroutineScope {
     val loader = context.imageLoader
     val request = ImageRequest.Builder(context)
         .data(uri.replace("size=128", "size=16"))
@@ -135,7 +142,25 @@ suspend fun extractColorsFromUri(uri: String, context: Context): List<Color> = c
     bitmap?.let { bitmapImage ->
         withContext(Dispatchers.Default) {
             val palette = Palette.Builder(bitmapImage).generate()
-            listOfNotNull(
+
+            val swatches = mapOf(
+                "Muted" to palette.mutedSwatch,
+                "Dark Vibrant" to palette.darkVibrantSwatch,
+                "Light Vibrant" to palette.lightVibrantSwatch,
+                "Vibrant" to palette.vibrantSwatch,
+                "Dominant" to palette.dominantSwatch,
+                "Light Muted" to palette.lightMutedSwatch
+            )
+
+            // Log the results
+            swatches.forEach { (name, swatch) ->
+                swatch?.let {
+                    val hex = Integer.toHexString(it.rgb).uppercase()
+                    Log.d("PaletteColor", "$name: #$hex | Body Text Color: ${Integer.toHexString(it.bodyTextColor)}")
+                }
+            }
+
+            listOf(
                 palette.mutedSwatch?.rgb?.let { Color(it) },
                 palette.darkVibrantSwatch?.rgb?.let { Color(it) },
                 palette.lightVibrantSwatch?.rgb?.let { Color(it) },

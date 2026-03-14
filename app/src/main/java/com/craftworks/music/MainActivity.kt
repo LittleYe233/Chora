@@ -520,9 +520,10 @@ fun TvSideNavigation(
                         modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
                         selected = Screen.Setting.route == backStackEntry?.destination?.route,
                         onClick = {
-                            navController.navigate(Screen.Setting.route) {
-                                launchSingleTop = true
-                            }
+                            if (Screen.Setting.route != backStackEntry?.destination?.route)
+                                navController.navigate(Screen.Setting.route) {
+                                    launchSingleTop = true
+                                }
                         },
                         leadingContent = {
                             androidx.tv.material3.Icon(

@@ -24,6 +24,7 @@ data class LrcLibLyrics(
 // NetEase Lyrics
 @Serializable
 data class NeteaseLyricsResponse(
+    val pureMusic: Boolean? = false,
     val lrc: NeteaseLrc? = null,
     val tlyric: NeteaseLrc? = null   // translation, may be absent or empty
 )
@@ -81,6 +82,9 @@ fun LrcLibLyrics.toLyrics(): List<Lyric> {
 }
 
 fun NeteaseLyricsResponse.toLyrics(): List<Lyric> {
+    if (pureMusic == true)
+        return emptyList()
+
     val originalMap = mutableMapOf<Int, String>()
     val translationMap = mutableMapOf<Int, String>()
 
