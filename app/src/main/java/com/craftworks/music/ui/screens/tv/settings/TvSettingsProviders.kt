@@ -14,6 +14,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -31,6 +32,7 @@ import androidx.tv.material3.Text
 import com.craftworks.music.R
 import com.craftworks.music.managers.LocalProviderManager
 import com.craftworks.music.managers.NavidromeManager
+import com.craftworks.music.ui.elements.dialogs.tv.CreateNavidromeProviderDialog
 import com.craftworks.music.ui.elements.tv.LocalProviderCard
 import com.craftworks.music.ui.elements.tv.LrcLibProviderCard
 import com.craftworks.music.ui.elements.tv.NavidromeProviderCard
@@ -45,6 +47,8 @@ fun TvS_ProviderScreen() {
 
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Navidrome", "Folders", "Lyrics")
+
+    var showNavidromeServerDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -82,7 +86,9 @@ fun TvS_ProviderScreen() {
                 item {
                     ListItem(
                         selected = false,
-                        onClick = {  },
+                        onClick = {
+                            showNavidromeServerDialog = true
+                        },
                         leadingContent = {
                             Icon(Icons.Rounded.Add, contentDescription = null)
                         },
@@ -122,4 +128,7 @@ fun TvS_ProviderScreen() {
             }
         }
     }
+
+    if(showNavidromeServerDialog)
+        CreateNavidromeProviderDialog(setShowDialog = { showNavidromeServerDialog = it })
 }

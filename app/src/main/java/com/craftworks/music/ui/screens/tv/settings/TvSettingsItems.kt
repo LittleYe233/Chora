@@ -41,7 +41,7 @@ fun SettingsButtonItem(
 @Composable
 fun SettingsSwitchItem(
     title: String,
-    icon: ImageVector,
+    icon: ImageVector? = null,
     checked: Boolean,
     enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit
@@ -50,13 +50,15 @@ fun SettingsSwitchItem(
         selected = false,
         enabled = enabled,
         headlineContent = { Text(text = title) },
-        leadingContent = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(ButtonDefaults.IconSize)
-            )
+        leadingContent = icon?.let {
+            {
+                Icon(
+                    imageVector = it,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )
+            }
         },
         trailingContent = {
             Switch(
