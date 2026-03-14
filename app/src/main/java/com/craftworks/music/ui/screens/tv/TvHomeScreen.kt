@@ -20,10 +20,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.runtime.Composable
@@ -39,8 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component1
-import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component2
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
@@ -120,14 +118,124 @@ fun TvHomeScreen(
     }
 
 
-    val (focusRequester, selectedRow) = remember {
-        FocusRequester.createRefs()
-    }
+    val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
 
+    val columnState = rememberLazyListState()
+
+    LazyColumn(
+        state = columnState,
+        modifier = Modifier
+            .fillMaxSize()
+            .focusGroup()
+            .focusRequester(focusRequester)
+            .focusRestorer(focusRequester),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        item (key = "carousel") {
+            val carouselState = rememberCarouselState()
+            var carouselFocused by remember { mutableStateOf(false) }
+            val coroutineScope = rememberCoroutineScope()
+
+            Carousel(
+                itemCount = shuffledAlbums.size,
+                modifier = Modifier
+                    .height(320.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 48.dp)
+                    .padding(top = 24.dp)
+                    .clip(MaterialTheme.shapes.large)
+                    .onFocusChanged {
+                        carouselFocused = it.isFocused
+                    },
+                carouselState = carouselState,
+                contentTransformEndToStart =
+                    fadeIn(tween(600)).togetherWith(fadeOut(tween(600))),
+                contentTransformStartToEnd =
+                    fadeIn(tween(600)).togetherWith(fadeOut(tween(600)))
+            ) { itemIndex ->
+                val album = shuffledAlbums[itemIndex]
+                CarouselItem(
+                    album = album,
+                    carouselFocused = carouselFocused,
+                    carouselState = carouselState,
+                    modifier = Modifier.animateEnterExit(
+                        enter = slideInHorizontally(animationSpec = tween(1000)) { it / 16 },
+                        exit = slideOutHorizontally(animationSpec = tween(1000)) { -it / 16 }
+                    ),
+                    onPlay = {
+                        coroutineScope.launch {
+                            val mediaItems = viewModel.getAlbumSongs(
+                                album.mediaMetadata.extras?.getString("navidromeID") ?: ""
+                            )
+                            if (mediaItems.size > 1)
+                                SongHelper.play(
+                                    mediaItems = mediaItems.subList(1, mediaItems.size),
+                                    index = 0,
+                                    mediaController = mediaController
+                                )
+                        }
+                    }
+                )
+            }
+        }
+
+        items(
+            orderedHomeItems.filter { it.enabled },
+            key = { it.key }
+        ) { item ->
+            val albums = when (item.key) {
+                "recently_played" -> recentlyPlayedAlbums
+                "recently_added" -> recentAlbums
+                "most_played" -> mostPlayedAlbums
+                else -> emptyList()
+            }
+            if (albums.isEmpty()) return@items
+
+//            TvHomeAlbumRow(
+//                title = stringResource(titleMap[item.key] ?: R.string.recently_played),
+//                albums = albums,
+//                navHostController = navHostController
+//            )
+
+            Column (
+                Modifier.focusGroup()
+            ) {
+                Text(
+                    text = stringResource(titleMap[item.key] ?: R.string.recently_played),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 48.dp, vertical = 8.dp)
+                )
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    modifier = Modifier
+                        .focusGroup(),
+                    contentPadding = PaddingValues(horizontal = 48.dp)
+                ) {
+                    items(albums, key = {it.mediaId} ) { album ->
+                        TvAlbumCard(
+                            album = album,
+                            onClick = {
+                                val albumEncoded = album.toAlbum()
+                                val encodedImage = URLEncoder.encode(albumEncoded.coverArt, "UTF-8")
+                                navHostController.navigate(Screen.AlbumDetails.route + "/${albumEncoded.navidromeID}/$encodedImage") {
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /*
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -175,70 +283,15 @@ fun TvHomeScreen(
         }
         */
 
-        val carouselState = rememberCarouselState()
-        var carouselFocused by remember { mutableStateOf(false) }
-        val coroutineScope = rememberCoroutineScope()
 
-        Carousel(
-            itemCount = shuffledAlbums.size,
-            modifier = Modifier
-                .height(320.dp)
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp)
-                .clip(MaterialTheme.shapes.large)
-                .focusGroup()
-                .onFocusChanged {
-                    carouselFocused = it.isFocused
-                },
-            carouselState = carouselState,
-            contentTransformEndToStart =
-                fadeIn(tween(600)).togetherWith(fadeOut(tween(600))),
-            contentTransformStartToEnd =
-                fadeIn(tween(600)).togetherWith(fadeOut(tween(600)))
-        ) { itemIndex ->
-            val album = shuffledAlbums[itemIndex]
-            CarouselItem(
-                album = album,
-                carouselFocused = carouselFocused,
-                carouselState = carouselState,
-                modifier = Modifier.animateEnterExit(
-                    enter = slideInHorizontally(animationSpec = tween(1000)) { it / 16 },
-                    exit = slideOutHorizontally(animationSpec = tween(1000)) { -it / 16 }
-                ),
-                onPlay = {
-                    coroutineScope.launch {
-                        val mediaItems = viewModel.getAlbumSongs(
-                            album.mediaMetadata.extras?.getString("navidromeID") ?: ""
-                        )
-                        if (mediaItems.size > 1)
-                            SongHelper.play(
-                                mediaItems = mediaItems.subList(1, mediaItems.size),
-                                index = 0,
-                                mediaController = mediaController
-                            )
-                    }
-                }
-            )
-        }
 
         orderedHomeItems.forEach { item ->
             if (!item.enabled || item.key == "random_songs") return@forEach
 
-            val albums = when (item.key) {
-                "recently_played" -> recentlyPlayedAlbums
-                "recently_added" -> recentAlbums
-                "most_played" -> mostPlayedAlbums
-                else -> emptyList()
-            }
-            if (albums.isEmpty()) return@forEach
 
-            TvHomeAlbumRow(
-                title = stringResource(titleMap[item.key] ?: R.string.recently_played),
-                albums = albums,
-                navHostController = navHostController,
-            )
         }
     }
+    */
 }
 
 @OptIn(ExperimentalTvMaterial3Api::class)
@@ -246,37 +299,28 @@ fun TvHomeScreen(
 private fun TvHomeAlbumRow(
     title: String,
     albums: List<MediaItem>,
-    navHostController: NavHostController,
+    navHostController: NavHostController
 ) {
-    val focus = remember { FocusRequester() }
-
-    Column(modifier = Modifier
-        .padding(bottom = 24.dp)
+    Column (
+        Modifier.focusGroup()
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(start = 12.dp, bottom = 12.dp)
+            modifier = Modifier.padding(horizontal = 48.dp, vertical = 8.dp)
         )
 
         LazyRow(
-            contentPadding = PaddingValues(start = 12.dp, end = 48.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(24.dp),
             modifier = Modifier
-                .focusRequester(focus)
-                .focusRestorer()
                 .focusGroup(),
+            contentPadding = PaddingValues(horizontal = 48.dp)
         ) {
-            items(albums) { album ->
+            items(albums, key = {it.mediaId} ) { album ->
                 TvAlbumCard(
                     album = album,
-                    modifier = Modifier
-                        .padding(end = 16.dp)
-                        .onFocusChanged {
-                            focus.saveFocusedChild()
-                        },
                     onClick = {
                         val albumEncoded = album.toAlbum()
                         val encodedImage = URLEncoder.encode(albumEncoded.coverArt, "UTF-8")
@@ -310,15 +354,12 @@ private fun CarouselItem(
         .filter { it.isNotBlank() }
         .joinToString("  •  ")
 
-    val focusRequester = remember { FocusRequester() }
-
-    val buttonModifier = if (carouselFocused) {
-        Modifier.onFirstGainingVisibility {
-            focusRequester.requestFocus()
+    val buttonModifier =
+        if (carouselFocused) {
+            Modifier.requestFocusOnFirstGainingVisibility()
+        } else {
+            Modifier
         }
-    } else {
-        Modifier
-    }
 
     // Extract dominant color of the carousel image to use as background
     var dominantColor by remember { mutableStateOf(Color.Black) }
@@ -359,7 +400,6 @@ private fun CarouselItem(
                 .diskCachePolicy(CachePolicy.DISABLED)
                 .crossfade(true)
                 .build(),
-            placeholder = painterResource(R.drawable.placeholder),
             fallback = painterResource(R.drawable.placeholder),
             contentDescription = null,
             contentScale = ContentScale.Crop,
@@ -425,8 +465,6 @@ private fun CarouselItem(
             Button(
                 onClick = onPlay,
                 modifier = buttonModifier
-                    .focusRequester(focusRequester)
-
             ) {
                 Icon(
                     imageVector = Icons.Rounded.PlayArrow,
@@ -446,4 +484,12 @@ fun Modifier.onFirstGainingVisibility(onGainingVisibility: () -> Unit): Modifier
         if (isVisible) onGainingVisibility()
     }
     return onPlaced { isVisible = true }
+}
+
+@Composable
+fun Modifier.requestFocusOnFirstGainingVisibility(): Modifier {
+    val focusRequester = remember { FocusRequester() }
+    return focusRequester(focusRequester).onFirstGainingVisibility {
+        focusRequester.requestFocus()
+    }
 }
