@@ -1,11 +1,18 @@
 package com.craftworks.music.ui.elements.tv
 
+import android.util.Log
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.Checkbox
 import androidx.tv.material3.Icon
 import androidx.tv.material3.ListItem
@@ -17,6 +24,9 @@ import com.craftworks.music.R
 import com.craftworks.music.data.NavidromeProvider
 import com.craftworks.music.data.repository.LyricsState
 import com.craftworks.music.managers.LocalProviderManager
+import com.craftworks.music.managers.NavidromeManager
+import com.craftworks.music.managers.settings.AppearanceSettingsManager
+import kotlinx.coroutines.launch
 
 @Composable
 private fun ProviderItem(
@@ -77,13 +87,48 @@ fun NavidromeProviderCard(
         enabled = true,
         allowSelfSignedCert = true
     )
-) = ProviderItem(
-    icon = R.drawable.s_m_navidrome,
-    title = server.username,
-    subtitle = server.url,
-    enabled = server.enabled == true,
-    onClick = { },
-)
+) {
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    val currentServerId by NavidromeManager.currentServerId.collectAsStateWithLifecycle()
+
+    val checked by remember { derivedStateOf { server.id == currentServerId } }
+
+    ProviderItem(
+        icon = R.drawable.s_m_navidrome,
+        title = server.username,
+        subtitle = server.url,
+        enabled = checked,
+        /*
+        trailingContent = {
+            IconButton(
+                onClick = {
+                    NavidromeManager.removeServer(server.id)
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Delete,
+                    contentDescription = null
+                )
+            }
+        },
+        */
+        onLongClick = {
+            NavidromeManager.removeServer(server.id)
+        },
+        onClick = {
+            coroutineScope.launch {
+                if (!checked && NavidromeManager.getAllServers().size == 1)
+                    NavidromeManager.setCurrentServer(null)
+                else
+                    NavidromeManager.setCurrentServer(server.id)
+                AppearanceSettingsManager(context).setUsername(server.username)
+            }
+            Log.d("NAVIDROME", "Navidrome Current Server: ${server.id}")
+        },
+    )
+}
 
 @Preview
 @Composable

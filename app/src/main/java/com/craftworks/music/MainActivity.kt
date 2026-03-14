@@ -395,31 +395,23 @@ fun TvSideNavigation(
 
     val orderedNavItems = AppearanceSettingsManager(context).bottomNavItemsFlow.collectAsState(
         initial = listOf(
-            BottomNavItem("Home", R.drawable.rounded_home_24, "home_screen"),
             BottomNavItem(
-                stringResource((R.string.Albums)),
-                R.drawable.rounded_library_music_24,
-                "album_screen"
+                "Home", R.drawable.rounded_home_24, "home_screen"
             ),
             BottomNavItem(
-                stringResource((R.string.songs)),
-                R.drawable.round_music_note_24,
-                "songs_screen"
+                stringResource((R.string.Albums)), R.drawable.rounded_library_music_24, "album_screen"
             ),
             BottomNavItem(
-                stringResource((R.string.Artists)),
-                R.drawable.rounded_artist_24,
-                "artists_screen"
+                stringResource((R.string.songs)), R.drawable.round_music_note_24, "songs_screen"
             ),
             BottomNavItem(
-                stringResource((R.string.radios)),
-                R.drawable.rounded_radio,
-                "radio_screen"
+                stringResource((R.string.Artists)), R.drawable.rounded_artist_24, "artists_screen"
             ),
             BottomNavItem(
-                stringResource((R.string.playlists)),
-                R.drawable.placeholder,
-                "playlist_screen"
+                stringResource((R.string.radios)), R.drawable.rounded_radio, "radio_screen"
+            ),
+            BottomNavItem(
+                stringResource((R.string.playlists)), R.drawable.placeholder, "playlist_screen"
             ),
         )
     ).value
@@ -510,12 +502,12 @@ fun TvSideNavigation(
                     leadingContent = {
                         androidx.tv.material3.Icon(
                             imageVector = ImageVector.vectorResource(R.drawable.s_m_playback),
-                            contentDescription = stringResource(R.string.Action_Play),
+                            contentDescription = null,
                             modifier = Modifier.size(24.dp)
                         )
                     }
                 ) {
-                    androidx.tv.material3.Text(text = stringResource(R.string.Action_Play))
+                    androidx.tv.material3.Text(text = "Playing")
                 }
 
                 Column(
@@ -526,7 +518,7 @@ fun TvSideNavigation(
                 ) {
                     NavigationDrawerItem(
                         modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
-                        selected = false,
+                        selected = Screen.Setting.route == backStackEntry?.destination?.route,
                         onClick = {
                             navController.navigate(Screen.Setting.route) {
                                 launchSingleTop = true
