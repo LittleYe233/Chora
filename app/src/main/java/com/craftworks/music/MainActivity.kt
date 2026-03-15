@@ -445,7 +445,7 @@ fun TvSideNavigation(
                 orderedNavItems.forEach { item ->
                     if (!item.enabled) return@forEach
 
-                    val isSelected = isClosed &&  item.screenRoute == backStackEntry?.destination?.route
+                    val isSelected = item.screenRoute == backStackEntry?.destination?.route
 
                     NavigationDrawerItem(
                         modifier = Modifier
@@ -496,6 +496,10 @@ fun TvSideNavigation(
                         if (!isPlayingSelected) {
                             navController.navigate(Screen.NowPlayingLandscape.route) {
                                 launchSingleTop = true
+                                restoreState = true
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
                             }
                         }
                     },
@@ -523,6 +527,10 @@ fun TvSideNavigation(
                             if (Screen.Setting.route != backStackEntry?.destination?.route)
                                 navController.navigate(Screen.Setting.route) {
                                     launchSingleTop = true
+                                    restoreState = true
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        saveState = true
+                                    }
                                 }
                         },
                         leadingContent = {

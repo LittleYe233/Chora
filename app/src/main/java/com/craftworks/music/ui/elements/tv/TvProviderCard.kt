@@ -135,7 +135,7 @@ fun NavidromeProviderCard(
 fun LocalProviderCard(
     folder: String = ""
 ) = ProviderItem(
-    icon = R.drawable.s_m_navidrome,
+    icon = R.drawable.s_m_local_filled,
     title = "Local",
     subtitle = folder,
     enabled = LocalProviderManager.getAllFolders().contains(folder),
