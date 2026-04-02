@@ -100,9 +100,9 @@ private const val SHADER_CODE = """
 
         float d = -iTime * 0.5;
         float a = 0.0;
-        for (float i = 0.0; i < 4; ++i) {
+        for (float i = 0.0; i < 3; ++i) {
             a += cos(i - d - a * uv.x);
-            d += sin(uv.y * i + a);
+            d += sin(uv.y * i + a) / 2;
         }
         d += iTime * 0.5;
         

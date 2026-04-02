@@ -182,13 +182,14 @@ fun AlbumGrid(
     }
 
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(128.dp),
+        columns = GridCells.Adaptive(96.dp),
         modifier = Modifier
             .wrapContentWidth()
-            .fillMaxHeight()
-            .padding(end = 12.dp),
+            .fillMaxHeight(),
         state = gridState,
         verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(12.dp)
     ) {
         if (showDividers && groupedAlbums.size > 1) {
             groupedAlbums.forEach { (groupName, albumsInGroup) ->
@@ -280,12 +281,14 @@ fun AlbumGrid(
     }
 
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(128.dp),
+        columns = GridCells.Adaptive(96.dp),
         modifier = Modifier
             .wrapContentWidth()
-            .fillMaxHeight()
-            .padding(end = 12.dp),
-        state = gridState
+            .fillMaxHeight(),
+        state = gridState,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(12.dp)
     ) {
         if (showDividers && groupedAlbums.size > 1) {
             groupedAlbums.forEach { (groupName, albumsInGroup) ->
@@ -370,9 +373,8 @@ fun AlbumRow(
 
     LazyRow(
         modifier = Modifier.fillMaxSize().heightIn(min = 172.dp),
-        contentPadding = PaddingValues(
-            end = 12.dp
-        )
+        contentPadding = PaddingValues(horizontal = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         itemsIndexed(
             items = albums,
@@ -433,11 +435,14 @@ fun ArtistsGrid(
     }
 
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(128.dp),
+        columns = GridCells.Adaptive(96.dp),
         modifier = Modifier
             .wrapContentWidth()
             .fillMaxHeight(),
-        state = gridState
+        state = gridState,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(12.dp)
     ) {
         if (showProviderDividers && groupedArtists.size > 1) {
             groupedArtists.forEach { (groupName, artistsInGroup) ->
@@ -489,10 +494,13 @@ fun ArtistsGrid(
 @Composable
 fun PlaylistGrid(playlists: List<MediaItem>, onPlaylistSelected: (playlist: MediaItem) -> Unit){
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(128.dp),
+        columns = GridCells.Adaptive(96.dp),
         modifier = Modifier
             .wrapContentWidth()
-            .fillMaxHeight()
+            .fillMaxHeight(),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(12.dp)
     ) {
         item {
             val favouritesPlaylist = MediaItem.Builder()

@@ -1,6 +1,7 @@
 package com.craftworks.music.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -117,15 +118,16 @@ fun RadioScreen(
         ) { innerPadding ->
             Column(
                 modifier = Modifier
-                    .padding(
-                        top = innerPadding.calculateTopPadding()
-                    )
+                    .padding(top = innerPadding.calculateTopPadding())
             ) {
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(128.dp),
+                    columns = GridCells.Adaptive(96.dp),
                     modifier = Modifier
                         .wrapContentWidth()
                         .fillMaxHeight(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(12.dp)
                 ) {
                     items(radios) { radio ->
                         RadioCard(

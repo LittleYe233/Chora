@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,7 +36,7 @@ import com.craftworks.music.data.model.MediaData
 fun ArtistCard(artist: MediaData.Artist, onClick: () -> Unit) {
     Column(
         modifier = Modifier
-            .padding(12.dp)
+            //.padding(12.dp)
             .aspectRatio(0.8f)
             .widthIn(min = 96.dp, max = 256.dp)
             .clip(RoundedCornerShape(12.dp))

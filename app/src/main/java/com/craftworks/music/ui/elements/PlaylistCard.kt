@@ -35,7 +35,7 @@ fun PlaylistCard(playlist: MediaItem, onClick: () -> Unit) {
     val context = LocalContext.current
     Column(
         modifier = Modifier
-            .padding(12.dp)
+            //.padding(12.dp)
             .clip(RoundedCornerShape(12.dp))
             .combinedClickable(
                 onClick = { onClick() },

@@ -137,7 +137,10 @@ fun ArtistDetails(
                     top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
                 )
                 .dialogFocusable(),
-            columns = GridCells.Adaptive(128.dp)
+            columns = GridCells.Adaptive(96.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(12.dp)
         ) {
             // Group songs by their source (Local or Navidrome)
             val groupedAlbums =
@@ -148,7 +151,6 @@ fun ArtistDetails(
                 Column {
                     Box(
                         modifier = Modifier
-                            .padding(horizontal = 12.dp)
                             .height(192.dp)
                             .fillMaxWidth()
                     ) {
@@ -221,9 +223,13 @@ fun ArtistDetails(
                     // Description
                     artist?.description?.let { description ->
                         var expanded by remember { mutableStateOf(false) }
+
+                        val regex = Regex("""<a\s+(?:[^>]*?\s+)?href="([^"]*)"""")
+                        val matchResult = regex.find(description)
+                        val extractedUrl = matchResult?.groups?.get(1)?.value
+
                         Column (
                             modifier = Modifier
-                                .padding(horizontal = 12.dp)
                                 .fillMaxWidth()
                                 .heightIn(min = if (description.isBlank()) 0.dp else 32.dp)
                                 .clip(RoundedCornerShape(0.dp, 0.dp, 12.dp, 12.dp))
@@ -245,18 +251,13 @@ fun ArtistDetails(
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.padding(6.dp, 6.dp, 6.dp, 0.dp)
                                 )
+
                                 // Show more on last.fm  button
-                                if (expanded) {
+                                if (extractedUrl != null && expanded) {
                                     Button(
                                         onClick = {
-                                            val regex = Regex("""<a\s+(?:[^>]*?\s+)?href="([^"]*)"""")
-                                            val matchResult = regex.find(description)
-                                            val extractedUrl = matchResult?.groups?.get(1)?.value
-
-                                            extractedUrl?.let { url ->
-                                                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
-                                                context.startActivity(intent)
-                                            }
+                                            val intent = Intent(Intent.ACTION_VIEW, extractedUrl.toUri())
+                                            context.startActivity(intent)
                                         },
                                         modifier = Modifier.widthIn(128.dp).padding(vertical = 6.dp),
                                     ) {
@@ -355,7 +356,7 @@ fun ArtistDetails(
                     color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(start = 12.dp, top = 6.dp)
+                    modifier = Modifier.padding(top = 6.dp)
                 )
             }
 
@@ -366,10 +367,10 @@ fun ArtistDetails(
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier
-                            .padding(horizontal = 12.dp)
                             .padding(top = 12.dp)
                     )
                 }
+
                 itemsIndexed(albumsInGroup) { index, album ->
                     AlbumCard(
                         album = album,

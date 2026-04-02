@@ -346,7 +346,7 @@ fun S_AppearanceScreen(navHostController: NavHostController = rememberNavControl
                     Column(
                         Modifier
                             .clip(RoundedCornerShape(2.dp))
-                            .background(MaterialTheme.colorScheme.background)
+                            .background(MaterialTheme.colorScheme.surfaceBright)
                     ) {
                         Text(
                             text = stringResource(R.string.Setting_LyricsAnimationSpeed),
