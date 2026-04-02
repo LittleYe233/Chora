@@ -34,8 +34,7 @@ data class NeteaseLrc(
     val lyric: String? = null
 )
 
-//region Convert proprietary lyric format to app format.
-
+//region Convert lyric format to app format.
 fun MediaData.PlainLyrics.toLyric(): Lyric {
     return Lyric(
         timestamp = -1,
@@ -67,7 +66,6 @@ fun LrcLibLyrics.toLyrics(): List<Lyric> {
             raw.add(Pair(time, lyricText))
         }
 
-        // Group lines sharing the same timestamp
         return raw
             .groupBy { it.first }
             .map { (time, lines) -> Lyric(time, lines.map { it.second }) }

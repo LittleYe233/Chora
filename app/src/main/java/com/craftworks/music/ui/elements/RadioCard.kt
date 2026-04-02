@@ -40,7 +40,7 @@ fun RadioCard(
 ) {
     Column(
         modifier = Modifier
-            .padding(12.dp)
+            .padding(6.dp)
             .clip(RoundedCornerShape(12.dp))
             .combinedClickable(
                 onClick = { onClick(); Log.d("Play", "Clicked Radio: " + radio.mediaMetadata.station) },

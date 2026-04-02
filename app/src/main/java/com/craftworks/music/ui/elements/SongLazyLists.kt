@@ -1,6 +1,5 @@
 package com.craftworks.music.ui.elements
 
-import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -38,7 +37,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -55,7 +53,6 @@ import com.craftworks.music.data.model.toAlbum
 import com.craftworks.music.managers.NavidromeManager
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.player.SongHelper
-import com.craftworks.music.ui.elements.tv.TvAlbumCard
 import com.craftworks.music.ui.viewmodels.AlbumScreenViewModel
 import com.craftworks.music.ui.viewmodels.SongsScreenViewModel
 import kotlinx.coroutines.flow.filter
@@ -100,7 +97,7 @@ fun SongsHorizontalColumn(
             .fillMaxWidth()
             .padding(horizontal = 12.dp),
         state = listState,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         // Group songs by their source (Local or Navidrome)
         val groupedSongs = songList.groupBy { song ->
@@ -184,13 +181,14 @@ fun AlbumGrid(
     }
 
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(128.dp),
+        columns = GridCells.Adaptive(96.dp),
         modifier = Modifier
             .wrapContentWidth()
-            .fillMaxHeight()
-            .padding(end = 12.dp),
+            .fillMaxHeight(),
         state = gridState,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        contentPadding = PaddingValues(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (showDividers && groupedAlbums.size > 1) {
             groupedAlbums.forEach { (groupName, albumsInGroup) ->
@@ -282,12 +280,13 @@ fun AlbumGrid(
     }
 
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(128.dp),
+        columns = GridCells.Adaptive(96.dp),
         modifier = Modifier
             .wrapContentWidth()
-            .fillMaxHeight()
-            .padding(end = 12.dp),
-        state = gridState
+            .fillMaxHeight(),
+        contentPadding = PaddingValues(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (showDividers && groupedAlbums.size > 1) {
             groupedAlbums.forEach { (groupName, albumsInGroup) ->
@@ -371,10 +370,12 @@ fun AlbumRow(
     val dividerIndex = albums.indexOfFirst { it.mediaMetadata.extras?.getString("navidromeID")!!.startsWith("Local_") }
 
     LazyRow(
-        modifier = Modifier.fillMaxSize().heightIn(min = 172.dp),
+        modifier = Modifier.fillMaxSize().heightIn(min = 128.dp),
         contentPadding = PaddingValues(
-            end = 12.dp
-        )
+            horizontal = 12.dp
+        ),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         itemsIndexed(
             items = albums,
@@ -404,27 +405,15 @@ fun AlbumRow(
                     }
                 }
             }
-            val isTV = LocalConfiguration.current.uiMode and
-                    Configuration.UI_MODE_TYPE_MASK == Configuration.UI_MODE_TYPE_TELEVISION
-            if (isTV)
-                TvAlbumCard(
-                    album = album,
-                    onClick = {
-                        onAlbumSelected(album.toAlbum())
-                    },
-                    modifier = Modifier.animateItem()
-                )
-            else
-                AlbumCard(
-                    album = album,
-                    onClick = {
-                        onAlbumSelected(album.toAlbum())
-                    },
-                    onPlay = {
-                        onPlay(album)
-                    },
-                    modifier = Modifier.animateItem()
-                )
+            AlbumCard(
+                album = album,
+                onClick = {
+                    onAlbumSelected(album.toAlbum())
+                },
+                onPlay = {
+                    onPlay(album)
+                }
+            )
         }
     }
 }

@@ -19,8 +19,8 @@ android {
         applicationId = "com.craftworks.music"
         minSdk = 23
         targetSdk = 36
-        versionCode = 291
-        versionName = "1.29.1"
+        versionCode = 230
+        versionName = "1.30"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -39,7 +39,7 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
         debug {
-            isDebuggable = true
+            isDebuggable = false
             isProfileable = true
         }
     }

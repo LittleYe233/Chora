@@ -137,7 +137,8 @@ fun ArtistDetails(
                     top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
                 )
                 .dialogFocusable(),
-            columns = GridCells.Adaptive(128.dp)
+            columns = GridCells.Adaptive(128.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             // Group songs by their source (Local or Navidrome)
             val groupedAlbums =
