@@ -20,13 +20,13 @@ A simple and light-weight app that streams music from a Subsonic or Navidrome se
 
 ## W.I.P
 
-- Better Android TV navigation.
-- Local DB for local files and Navidrome offline mode.
+- Better Android TV navigation. #60
 
 ## Roadmap
 
-- Jellyfin (Music) Support.
 - Chromecast
+- Local DB for local files and Navidrome offline mode.
+- Jellyfin (Music) Support.
 
 ## Known Issues
 
@@ -44,6 +44,10 @@ A simple and light-weight app that streams music from a Subsonic or Navidrome se
     <img src="https://github.com/CraftWorksMC/Chora/blob/master/Github/Images/SongScreen.png?raw=true" width=200>
 </p>
 
+
+## Help translate!
+
+Help translate on <a href="https://crowdin.com/project/chora">Crowdin</a>
 
 ## Support the project
 
