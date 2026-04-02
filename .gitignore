@@ -17,3 +17,4 @@ local.properties
 /app/release/*
 /.kotlin/*
 /gradle/gradle-daemon-jvm.properties
+/crowdin.yml

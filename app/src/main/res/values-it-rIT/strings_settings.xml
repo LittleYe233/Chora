@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="Settings_Header_Appearance">Aspetto</string>
+    <string name="Setting_Username">Nome</string>
+    <string name="Setting_Background">Stile Sfondo</string>
+    <string name="Setting_Navbar_Items">Schede Della Barra Di Navigazione</string>
+    <string name="Setting_Home_Items">Elementi Schermata Home</string>
+    <string name="Setting_MoreInfo">Mostra Altre Info</string>
+    <string name="Setting_NowPlayingLyricsBlur">Sfocatura Testi</string>
+    <string name="Setting_NavidromeLogo">Mostra Logo Navidrome</string>
+    <string name="Setting_ProviderDividers">Mostra Divisori Provider</string>
+    <string name="Setting_RefreshAnimation">Mostra Animazione Refresh</string>
+    <string name="Setting_LyricsAnimationSpeed">Velocità Animazione Testo</string>
+    <string name="Setting_TrackNumbersAlbum">Mostra Numero di Traccia negli Album</string>
+    <string name="Settings_Header_Media">Fonti Media</string>
+    <string name="Settings_Header_Playback">Riproduzione</string>
+    <string name="Setting_Transcoding">Bitrate Massimo</string>
+    <string name="Setting_Transcoding_Wifi">Bitrate Massimo (WiFi)</string>
+    <string name="Setting_Transcoding_Data">Bitrate Massimo (Dati mobili)</string>
+    <string name="Setting_Transcoding_Format">Formato Codifica</string>
+    <string name="Setting_Scrobble_Percent">Min. Percentuale Scrobble</string>
+    <string name="Setting_Scrobble_Description">Solo Navidrome.</string>
+</resources>

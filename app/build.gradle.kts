@@ -3,8 +3,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
     kotlin("plugin.serialization") version "2.0.0"
     alias(libs.plugins.compose.compiler)
+    id("com.google.devtools.ksp")
     alias(libs.plugins.hilt)
-    kotlin("kapt")
 }
 
 android {
@@ -19,8 +19,8 @@ android {
         applicationId = "com.craftworks.music"
         minSdk = 23
         targetSdk = 36
-        versionCode = 291
-        versionName = "1.29.1"
+        versionCode = 300
+        versionName = "1.30"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -107,7 +107,7 @@ dependencies {
 
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
 
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
