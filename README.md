@@ -20,7 +20,7 @@ A simple and light-weight app that streams music from a Subsonic or Navidrome se
 
 ## W.I.P
 
-- Better Android TV navigation. #60
+- Better Android TV navigation.
 
 ## Roadmap
 
