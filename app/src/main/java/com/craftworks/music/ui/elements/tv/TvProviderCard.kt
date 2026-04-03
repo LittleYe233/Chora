@@ -140,16 +140,22 @@ fun LocalProviderCard(
     subtitle = folder,
     enabled = LocalProviderManager.getAllFolders().contains(folder),
     onClick = { },
+    onLongClick = {
+        LocalProviderManager.removeFolder(folder)
+    }
 )
 
-@Preview
 @Composable
-fun LrcLibProviderCard() = ProviderItem(
+fun LrcLibProviderCard(
+    url: String,
+    onLongClick: () -> Unit = { }
+) = ProviderItem(
     icon = R.drawable.lrclib_logo,
     title = "LRCLIB",
-    subtitle = "",
+    subtitle = url,
     enabled = LyricsState.useLrcLib,
     onClick = { LyricsState.useLrcLib = !LyricsState.useLrcLib },
+    onLongClick = onLongClick
 )
 
 @Preview

@@ -68,6 +68,7 @@ import com.craftworks.music.data.NavidromeProvider
 import com.craftworks.music.managers.LocalProviderManager
 import com.craftworks.music.managers.NavidromeManager
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
+import com.craftworks.music.managers.settings.MediaProviderSettingsManager
 import com.craftworks.music.providers.navidrome.getNavidromeStatus
 import com.craftworks.music.providers.navidrome.navidromeStatus
 import com.craftworks.music.ui.screens.tv.settings.SettingsSwitchItem
@@ -423,93 +424,6 @@ fun CreateNavidromeProviderDialog(
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_TELEVISION,
     wallpaper = Wallpapers.BLUE_DOMINATED_EXAMPLE
 )
-/*
-@Composable
-fun CreateLocalProviderDialog(
-    setShowDialog: (Boolean) -> Unit = { }
-) {
-    var directory: String by remember { mutableStateOf("") }
-
-    val backgroundColor = MaterialTheme.colorScheme.surface
-
-    val textFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = MaterialTheme.colorScheme.primary,
-        unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        errorBorderColor = MaterialTheme.colorScheme.error,
-        cursorColor = MaterialTheme.colorScheme.primary,
-        focusedTextColor = MaterialTheme.colorScheme.onSurface,
-        unfocusedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        errorTextColor = MaterialTheme.colorScheme.error
-    )
-
-    Dialog(
-        onDismissRequest = { setShowDialog(false) },
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-//        Text(
-//            text = stringResource(R.string.Settings_Header_Media),
-//            style = MaterialTheme.typography.titleLarge
-//        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .drawBehind { drawRect(color = backgroundColor) }
-                .padding(horizontal = 48.dp, vertical = 48.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            OutlinedTextField(
-                value = directory,
-                onValueChange = { directory = it },
-                label = {
-                    Text(
-                        text = stringResource(R.string.Label_Local_Directory),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                },
-                placeholder = {
-                    Text(
-                        text = "/Music/",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                singleLine = true,
-                isError = navidromeStatus.value == "Invalid URL",
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Uri,
-                    imeAction = ImeAction.Done,
-                    autoCorrectEnabled = false
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        LocalProviderManager.addFolder(directory)
-                        setShowDialog(false)
-                    }
-                ),
-                colors = textFieldColors,
-                modifier = Modifier.widthIn(max = 320.dp)
-            )
-
-            ListItem(
-                selected = false,
-                modifier = Modifier.widthIn(max = 320.dp),
-                headlineContent = { Text(stringResource(R.string.Action_Add)) },
-                leadingContent = {
-                    Icon(
-                        imageVector = Icons.Rounded.Add,
-                        contentDescription = stringResource(R.string.Action_Login),
-                    )
-                },
-                onClick = {
-                    LocalProviderManager.addFolder(directory)
-                    setShowDialog(false)
-                }
-            )
-        }
-    }
-}
-*/
 @Composable
 fun CreateLocalProviderDialog(
     setShowDialog: (Boolean) -> Unit = {}
@@ -638,7 +552,9 @@ fun CreateLocalProviderDialog(
             ) {
                 ListItem(
                     selected = false,
-                    modifier = Modifier.widthIn(max = 260.dp).focusRequester(action),
+                    modifier = Modifier
+                        .widthIn(max = 260.dp)
+                        .focusRequester(action),
                     headlineContent = {
                         Text(stringResource(R.string.Action_Add))
                     },
@@ -673,5 +589,99 @@ fun CreateLocalProviderDialog(
             action.requestFocus()
         else
             content.requestFocus()
+    }
+}
+
+
+@Preview(
+    showBackground = false, showSystemUi = true, device = "id:tv_1080p",
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_TELEVISION,
+    wallpaper = Wallpapers.BLUE_DOMINATED_EXAMPLE
+)
+@Composable
+fun ModifyLrcLibProviderDialog(
+    initialUrl: String = "",
+    setShowDialog: (Boolean) -> Unit = { }
+) {
+    val context = LocalContext.current
+    val settingsManager = remember { MediaProviderSettingsManager(context) }
+    var url: String by remember { mutableStateOf(initialUrl) }
+    val coroutineScope = rememberCoroutineScope()
+
+    val backgroundColor = MaterialTheme.colorScheme.surface
+
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        errorBorderColor = MaterialTheme.colorScheme.error,
+        cursorColor = MaterialTheme.colorScheme.primary,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        errorTextColor = MaterialTheme.colorScheme.error
+    )
+
+    Dialog(
+        onDismissRequest = { setShowDialog(false) },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .drawBehind { drawRect(color = backgroundColor) }
+                .padding(horizontal = 48.dp, vertical = 48.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.Top
+        ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 320.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = url,
+                    onValueChange = { url = it },
+                    label = {
+                        Text(
+                            text = "LRCLIB Url",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    },
+                    placeholder = {
+                        Text(
+                            text = "https://lrclib.net",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    singleLine = true,
+                    isError = url.isEmpty(),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Uri,
+                        imeAction = ImeAction.Done,
+                        autoCorrectEnabled = false
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            coroutineScope.launch {
+                                settingsManager.setLrcLibEndpoint(url)
+                                setShowDialog(false)
+                            }
+                        }
+                    ),
+                    colors = textFieldColors
+                )
+
+                ListItem(
+                    selected = false,
+                    headlineContent = { Text(stringResource(R.string.Action_Done)) },
+                    onClick = {
+                        coroutineScope.launch {
+                            settingsManager.setLrcLibEndpoint(url)
+                            setShowDialog(false)
+                        }
+                    }
+                )
+            }
+        }
     }
 }

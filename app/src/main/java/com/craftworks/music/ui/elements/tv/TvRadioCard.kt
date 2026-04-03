@@ -27,13 +27,17 @@ fun TvRadioCard(
     radio: MediaItem,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
+    onLongClick: (radio: MediaItem) -> Unit = { }
 ) {
     val radioName = radio.mediaMetadata.station?.toString() ?: ""
     StandardCardContainer(
         modifier = modifier.width(128.dp),
         imageCard = {
             Card(
-                onClick = onClick, interactionSource = it, content = {
+                onClick = onClick,
+                onLongClick = { onLongClick(radio) },
+                interactionSource = it,
+                content = {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(("android.resource://com.craftworks.music/" + R.drawable.radioplaceholder).toUri())

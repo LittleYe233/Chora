@@ -32,8 +32,10 @@ import androidx.tv.material3.Text
 import com.craftworks.music.R
 import com.craftworks.music.managers.LocalProviderManager
 import com.craftworks.music.managers.NavidromeManager
+import com.craftworks.music.managers.settings.MediaProviderSettingsManager
 import com.craftworks.music.ui.elements.dialogs.tv.CreateLocalProviderDialog
 import com.craftworks.music.ui.elements.dialogs.tv.CreateNavidromeProviderDialog
+import com.craftworks.music.ui.elements.dialogs.tv.ModifyLrcLibProviderDialog
 import com.craftworks.music.ui.elements.tv.LocalProviderCard
 import com.craftworks.music.ui.elements.tv.LrcLibProviderCard
 import com.craftworks.music.ui.elements.tv.NavidromeProviderCard
@@ -51,6 +53,9 @@ fun TvS_ProviderScreen() {
 
     var showNavidromeServerDialog by remember { mutableStateOf(false) }
     var showLocalFolderDialog by remember { mutableStateOf(false) }
+    var showLrcLibEditDialog by remember { mutableStateOf(false) }
+
+    val lrclibUrl by MediaProviderSettingsManager(context).lrcLibEndpointFlow.collectAsStateWithLifecycle("")
 
     Column(
         modifier = Modifier
@@ -125,9 +130,12 @@ fun TvS_ProviderScreen() {
             }
 
             2 -> Column(
+                modifier = Modifier.padding(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                LrcLibProviderCard()
+                LrcLibProviderCard(lrclibUrl) {
+                    showLrcLibEditDialog = true
+                }
                 NetEaseProviderCard()
             }
         }
@@ -138,4 +146,10 @@ fun TvS_ProviderScreen() {
 
     if(showLocalFolderDialog)
         CreateLocalProviderDialog(setShowDialog = { showLocalFolderDialog = it })
+
+    if(showLrcLibEditDialog)
+        ModifyLrcLibProviderDialog(
+            initialUrl = lrclibUrl,
+            setShowDialog = { showLrcLibEditDialog = it }
+        )
 }
