@@ -48,13 +48,13 @@ A simple and light-weight app that streams music from a Subsonic or Navidrome se
 
 ### TV
 <p align="center">
-    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TvNow-Playing-Synced.png?raw=true" width=200>
-    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TvHomeScreen.png?raw=true" width=200>
-    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TvAlbumScreen.png?raw=true" width=200>
-    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TvArtistScreen.png?raw=true" width=200>
-    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TvRadioScreen.png?raw=true" width=200>
-    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TvPlaylistScreen.png?raw=true" width=200>
-    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TvSongScreen.png?raw=true" width=200>
+    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TV/TvNow-Playing-Synced.png?raw=true" width=200>
+    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TV/TvHomeScreen.png?raw=true" width=200>
+    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TV/TvAlbumScreen.png" width=200>
+    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TV/TvArtistScreen.png?raw=true" width=200>
+    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TV/TvRadioScreen.png?raw=true" width=200>
+    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TV/TvPlaylistScreen.png?raw=true" width=200>
+    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TV/TvSongScreen.png?raw=true" width=200>
 </p>
 
 ## Support the project
