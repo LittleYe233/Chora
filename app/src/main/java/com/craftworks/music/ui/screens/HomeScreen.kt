@@ -77,6 +77,7 @@ import com.craftworks.music.ui.viewmodels.HomeScreenViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import java.net.URLEncoder
+import kotlin.math.roundToInt
 
 @Stable
 @Serializable
@@ -104,7 +105,9 @@ fun HomeScreen(
 
     var showRipple by remember { mutableIntStateOf(0) }
     val rippleXOffset = LocalWindowInfo.current.containerSize.width / 2
-    val rippleYOffset = dpToPx(12)
+
+    val rippleYOffset = dpToPx(WindowInsets.statusBars.asPaddingValues().calculateTopPadding().value.roundToInt())
+
     val onRefresh: () -> Unit = {
         viewModel.loadHomeScreenData()
         showRipple++
@@ -182,6 +185,7 @@ fun HomeScreen(
                                         !isSelected
                                     )
                                 }
+                                showRipple++
                             },
                             label = {
                                 Text(library.name)
