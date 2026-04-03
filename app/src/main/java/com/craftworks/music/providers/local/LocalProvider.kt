@@ -2,6 +2,7 @@ package com.craftworks.music.providers.local
 
 import android.content.ContentUris
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
@@ -231,7 +232,7 @@ class LocalProvider @Inject constructor(
         val contentResolver = context.contentResolver
         val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
 
-        val projection = arrayOf(
+        val projection = mutableListOf(
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.ALBUM_ID,
             MediaStore.Audio.Media.DATA,
@@ -242,10 +243,13 @@ class LocalProvider @Inject constructor(
             MediaStore.Audio.Media.DATE_ADDED,
             MediaStore.Audio.Media.TRACK,
             MediaStore.Audio.Media.YEAR,
-            MediaStore.Audio.Media.DURATION,
-            MediaStore.Audio.Media.BITRATE,
-            MediaStore.Audio.Media.GENRE
-        )
+            MediaStore.Audio.Media.DURATION
+        ).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                add(MediaStore.Audio.Media.BITRATE)
+                add(MediaStore.Audio.Media.GENRE)
+            }
+        }.toTypedArray()
 
         contentResolver.query(
             uri,
