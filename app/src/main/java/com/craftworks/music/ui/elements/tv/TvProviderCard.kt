@@ -1,19 +1,34 @@
 package com.craftworks.music.ui.elements.tv
 
 import android.util.Log
+import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component1
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component2
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.Checkbox
+import androidx.tv.material3.ExperimentalTvMaterial3Api
+import androidx.tv.material3.FilterChip
+import androidx.tv.material3.FilterChipDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.ListItem
 import androidx.tv.material3.ListItemDefaults
@@ -76,6 +91,7 @@ private fun ProviderItem(
     )
 }
 
+@OptIn(ExperimentalTvMaterial3Api::class)
 @Preview
 @Composable
 fun NavidromeProviderCard(
@@ -92,30 +108,93 @@ fun NavidromeProviderCard(
     val context = LocalContext.current
 
     val currentServerId by NavidromeManager.currentServerId.collectAsStateWithLifecycle()
+    val libraries by NavidromeManager.libraries.collectAsStateWithLifecycle()
 
     val checked by remember { derivedStateOf { server.id == currentServerId } }
 
-    ProviderItem(
-        icon = R.drawable.s_m_navidrome,
-        title = server.username,
-        subtitle = server.url,
-        enabled = checked,
-        /*
-        trailingContent = {
-            IconButton(
-                onClick = {
-                    NavidromeManager.removeServer(server.id)
-                }
+    val (mainFocus, librariesFocus) = remember { FocusRequester.createRefs() }
+
+    ListItem(
+        modifier = Modifier
+            .focusProperties {
+                down = if (libraries.size > 1 && server.id == currentServerId) librariesFocus else FocusRequester.Default
+            }
+            .focusRequester(mainFocus),
+        selected = checked,
+        scale = ListItemScale.None,
+        leadingContent = {
+            Icon(
+                painter = painterResource(R.drawable.s_m_navidrome),
+                contentDescription = null,
+                modifier = Modifier.size(ListItemDefaults.IconSize)
+            )
+        },
+        headlineContent = {
+            Text(
+                text = server.username,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier
+            )
+        },
+        supportingContent = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Delete,
-                    contentDescription = null
+                Text(
+                    text = server.url,
+                    style = MaterialTheme.typography.bodyMedium,
                 )
+                if (libraries.size > 1 && server.id == currentServerId) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier
+                            .focusRestorer()
+                            .focusGroup()
+                            .focusRequester(librariesFocus)
+                            .focusProperties {
+                                up = mainFocus
+                            }
+                    ) {
+                        libraries.forEach { (library, isSelected) ->
+                            FilterChip(
+                                onClick = {
+                                    NavidromeManager.currentServerId.value?.let { serverId ->
+                                        NavidromeManager.toggleServerLibraryEnabled(
+                                            serverId,
+                                            library.id,
+                                            !isSelected
+                                        )
+                                    }
+                                },
+                                content = {
+                                    Text(library.name)
+                                },
+                                leadingIcon =
+                                    if (isSelected) {
+                                        {
+                                            Icon(
+                                                imageVector = Icons.Filled.Done,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                            )
+                                        }
+                                    } else {
+                                        null
+                                    },
+                                selected = isSelected,
+                            )
+                        }
+                    }
+                }
             }
         },
-        */
-        onLongClick = {
-            NavidromeManager.removeServer(server.id)
+        trailingContent = {
+            Row {
+                Checkbox(
+                    checked = checked,
+                    onCheckedChange = { }
+                )
+            }
         },
         onClick = {
             coroutineScope.launch {
@@ -127,6 +206,9 @@ fun NavidromeProviderCard(
             }
             Log.d("NAVIDROME", "Navidrome Current Server: ${server.id}")
         },
+        onLongClick = {
+            NavidromeManager.removeServer(server.id)
+        }
     )
 }
 

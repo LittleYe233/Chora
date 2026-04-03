@@ -1,5 +1,6 @@
 package com.craftworks.music.ui.elements.tv
 
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -43,7 +44,7 @@ fun TvAlbumCard(
                         fallback = painterResource(R.drawable.placeholder),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize().aspectRatio(1f)
                     )
                 }
             )

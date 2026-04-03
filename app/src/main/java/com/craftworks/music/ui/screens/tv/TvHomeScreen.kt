@@ -64,7 +64,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.palette.graphics.Palette
 import androidx.tv.material3.Button
 import androidx.tv.material3.Carousel
-import androidx.tv.material3.CarouselState
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
@@ -95,6 +94,8 @@ fun TvHomeScreen(
     viewModel: HomeScreenViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+
+    //val libraries by NavidromeManager.libraries.collectAsStateWithLifecycle()
 
     val recentlyPlayedAlbums by viewModel.recentlyPlayedAlbums.collectAsStateWithLifecycle()
     val recentAlbums by viewModel.recentAlbums.collectAsStateWithLifecycle()
@@ -135,6 +136,42 @@ fun TvHomeScreen(
             .focusRestorer(focusRequester),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
+        /*
+        item (key = "libraries") {
+            if (libraries.size > 1) {
+                libraries.forEach { (library, isSelected) ->
+                    FilterChip(
+                        onClick = {
+                            NavidromeManager.currentServerId.value?.let { serverId ->
+                                NavidromeManager.toggleServerLibraryEnabled(
+                                    serverId,
+                                    library.id,
+                                    !isSelected
+                                )
+                            }
+                        },
+                        content = {
+                            Text(library.name)
+                        },
+                        selected = isSelected,
+                        leadingIcon = if (isSelected) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Filled.Done,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                )
+                            }
+                        } else {
+                            null
+                        },
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                }
+            }
+        }
+        */
+
         item (key = "carousel") {
             val carouselState = rememberCarouselState()
             var carouselFocused by remember { mutableStateOf(false) }
@@ -161,7 +198,6 @@ fun TvHomeScreen(
                 CarouselItem(
                     album = album,
                     carouselFocused = carouselFocused,
-                    carouselState = carouselState,
                     modifier = Modifier.animateEnterExit(
                         enter = slideInHorizontally(animationSpec = tween(1000)) { it / 16 },
                         exit = slideOutHorizontally(animationSpec = tween(1000)) { -it / 16 }
@@ -198,12 +234,6 @@ fun TvHomeScreen(
             }
             if (albums.isEmpty()) return@items
 
-//            TvHomeAlbumRow(
-//                title = stringResource(titleMap[item.key] ?: R.string.recently_played),
-//                albums = albums,
-//                navHostController = navHostController
-//            )
-
             Column (
                 Modifier.focusGroup()
             ) {
@@ -237,104 +267,6 @@ fun TvHomeScreen(
             }
         }
     }
-
-    /*
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .padding(vertical = 24.dp)
-            .focusGroup()
-            .focusRequester(focusRequester)
-            .focusRestorer(focusRequester),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        /*
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .focusGroup()
-        ) {
-            val username = AppearanceSettingsManager(context)
-                .usernameFlow.collectAsState("Username")
-
-            Text(
-                text = "${stringResource(R.string.welcome_text)}, ${username.value}!",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.weight(1f)
-            )
-
-            IconButton(
-                onClick = {
-                    navHostController.navigate(Screen.Setting.route) {
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }, modifier = Modifier
-                    .padding(end = 12.dp)
-                    .size(48.dp)
-            ) {
-                Icon(
-                    ImageVector.vectorResource(R.drawable.rounded_settings_24),
-                    contentDescription = "Settings",
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-        }
-        */
-
-
-
-        orderedHomeItems.forEach { item ->
-            if (!item.enabled || item.key == "random_songs") return@forEach
-
-
-        }
-    }
-    */
-}
-
-@OptIn(ExperimentalTvMaterial3Api::class)
-@Composable
-private fun TvHomeAlbumRow(
-    title: String,
-    albums: List<MediaItem>,
-    navHostController: NavHostController
-) {
-    Column (
-        Modifier.focusGroup()
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = 48.dp, vertical = 8.dp)
-        )
-
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(24.dp),
-            modifier = Modifier
-                .focusGroup(),
-            contentPadding = PaddingValues(horizontal = 48.dp)
-        ) {
-            items(albums, key = {it.mediaId} ) { album ->
-                TvAlbumCard(
-                    album = album,
-                    onClick = {
-                        val albumEncoded = album.toAlbum()
-                        val encodedImage = URLEncoder.encode(albumEncoded.coverArt, "UTF-8")
-                        navHostController.navigate(Screen.AlbumDetails.route + "/${albumEncoded.navidromeID}/$encodedImage") {
-                            launchSingleTop = true
-                        }
-                    }
-                )
-            }
-        }
-    }
 }
 
 @OptIn(ExperimentalTvMaterial3Api::class)
@@ -342,7 +274,6 @@ private fun TvHomeAlbumRow(
 private fun CarouselItem(
     album: MediaItem,
     carouselFocused: Boolean = false,
-    carouselState: CarouselState,
     onPlay: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
