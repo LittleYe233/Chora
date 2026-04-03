@@ -25,7 +25,8 @@ fun TvHorizontalSongCard(
     song: MediaItem,
     modifier: Modifier = Modifier,
     showTrackNumber: Boolean = false,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: () -> Unit = { }
 ) {
     val context = LocalContext.current
     WideCardContainer(
@@ -33,6 +34,7 @@ fun TvHorizontalSongCard(
         imageCard = {
             Card(
                 onClick = onClick,
+                onLongClick = onLongClick,
                 interactionSource = it,
                 content = {
                     if (showTrackNumber)

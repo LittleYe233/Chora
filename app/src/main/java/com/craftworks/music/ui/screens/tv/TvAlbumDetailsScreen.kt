@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.MediaItem
 import androidx.media3.session.MediaController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -67,8 +68,7 @@ import com.craftworks.music.formatMilliseconds
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.player.SongHelper
 import com.craftworks.music.ui.elements.GenrePill
-import com.craftworks.music.ui.elements.dialogs.AddSongToPlaylist
-import com.craftworks.music.ui.elements.dialogs.showAddSongToPlaylistDialog
+import com.craftworks.music.ui.elements.dialogs.tv.SongDialog
 import com.craftworks.music.ui.elements.tv.TvHorizontalSongCard
 import com.craftworks.music.ui.viewmodels.AlbumDetailsViewModel
 import kotlinx.coroutines.launch
@@ -86,6 +86,9 @@ fun TvAlbumDetails(
     val currentAlbum = viewModel.songsInAlbum.collectAsStateWithLifecycle().value
     val showTrackNumbers by AppearanceSettingsManager(context)
         .showTrackNumbersFlow.collectAsStateWithLifecycle(false)
+
+    var selectedSong by remember { mutableStateOf(MediaItem.EMPTY) }
+    var showSongDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(selectedAlbumId) {
         viewModel.loadAlbumDetails(selectedAlbumId)
@@ -296,6 +299,10 @@ fun TvAlbumDetails(
                                             launchSingleTop = true
                                         }
                                     }
+                                },
+                                onLongClick = {
+                                    selectedSong = song
+                                    showSongDialog = true
                                 }
                             )
                         }
@@ -312,6 +319,10 @@ fun TvAlbumDetails(
                                         launchSingleTop = true
                                     }
                                 }
+                            },
+                            onLongClick = {
+                                selectedSong = song
+                                showSongDialog = true
                             }
                         )
                     }
@@ -320,6 +331,9 @@ fun TvAlbumDetails(
         }
     }
 
-    if (showAddSongToPlaylistDialog.value)
-        AddSongToPlaylist(setShowDialog = { showAddSongToPlaylistDialog.value = it })
+    if (showSongDialog)
+        SongDialog(
+            song = selectedSong,
+            setShowDialog = { showSongDialog = it }
+        )
 }

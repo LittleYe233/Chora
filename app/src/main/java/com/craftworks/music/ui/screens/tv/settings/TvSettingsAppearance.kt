@@ -33,11 +33,11 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.craftworks.music.R
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
+import com.craftworks.music.ui.elements.dialogs.tv.BackgroundDialog
 import com.craftworks.music.ui.elements.dialogs.tv.HomeItemsDialog
+import com.craftworks.music.ui.elements.dialogs.tv.NameDialog
 import com.craftworks.music.ui.elements.dialogs.tv.NavbarItemsDialog
 import com.craftworks.music.ui.elements.dialogs.tv.NowPlayingTitleAlignmentDialog
-import com.craftworks.music.ui.elements.dialogs.tv.BackgroundDialog
-import com.craftworks.music.ui.elements.dialogs.tv.NameDialog
 import com.craftworks.music.ui.elements.dialogs.tv.ThemeDialog
 import com.craftworks.music.ui.playing.NowPlayingBackground
 import com.craftworks.music.ui.playing.NowPlayingTitleAlignment
@@ -109,7 +109,7 @@ fun TvS_AppearanceScreen() {
                 SettingsButtonItem(
                     title = stringResource(R.string.Setting_Background),
                     subtitle = stringResource(
-                        themeStrings[selectedTheme] ?: R.string.Background_Plain
+                        backgroundLabels[backgroundType] ?: R.string.Background_Plain
                     ),
                     icon = ImageVector.vectorResource(R.drawable.s_a_background),
                     onClick = { showBackgroundDialog = true }
@@ -234,6 +234,7 @@ fun TvS_AppearanceScreen() {
                 )
 
                 // Refresh Ripple
+                /*
                 val refreshRipple by AppearanceSettingsManager(context).refreshAnimationFlow.collectAsState(
                     true
                 )
@@ -248,6 +249,7 @@ fun TvS_AppearanceScreen() {
                     },
                     enabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
                 )
+                */
 
                 // Track numbers in album view
                 val showTrackNumbers by AppearanceSettingsManager(context).showTrackNumbersFlow.collectAsState(

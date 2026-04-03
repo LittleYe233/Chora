@@ -21,8 +21,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.MediaItem
 import androidx.media3.session.MediaController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -58,6 +62,7 @@ import com.craftworks.music.data.model.Screen
 import com.craftworks.music.formatMilliseconds
 import com.craftworks.music.player.SongHelper
 import com.craftworks.music.player.rememberManagedMediaController
+import com.craftworks.music.ui.elements.dialogs.tv.SongDialog
 import com.craftworks.music.ui.elements.tv.TvHorizontalSongCard
 import com.craftworks.music.ui.viewmodels.PlaylistScreenViewModel
 import kotlinx.coroutines.launch
@@ -75,6 +80,9 @@ fun TvPlaylistDetails(
 
     val playlistSongs = viewModel.selectedPlaylistSongs.collectAsStateWithLifecycle().value
     val isLoading = viewModel.isLoading.collectAsStateWithLifecycle().value
+
+    var selectedSong by remember { mutableStateOf(MediaItem.EMPTY) }
+    var showSongDialog by remember { mutableStateOf(false) }
 
     val playlistDuration =
         remember(playlistSongs) { playlistSongs.sumOf { it.mediaMetadata.durationMs ?: 0 } }
@@ -227,6 +235,10 @@ fun TvPlaylistDetails(
                                     launchSingleTop = true
                                 }
                             }
+                        },
+                        onLongClick = {
+                            selectedSong = song
+                            showSongDialog = true
                         }
                     )
                 }
@@ -234,4 +246,9 @@ fun TvPlaylistDetails(
         }
     }
 
+    if (showSongDialog)
+        SongDialog(
+            song = selectedSong,
+            setShowDialog = { showSongDialog = it }
+        )
 }

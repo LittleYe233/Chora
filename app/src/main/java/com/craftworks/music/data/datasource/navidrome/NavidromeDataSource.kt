@@ -122,7 +122,7 @@ class NavidromeDataSource @Inject constructor() {
         val salt = generateSalt(8)
         val token = md5Hash(server.password + salt)
 
-        val url = URLBuilder("${server.url}/rest/$endpoint").apply {
+        val url = URLBuilder("${server.url}/rest/${endpoint.replace(" ", "%20")}").apply {
             parameters.append("u", server.username)
             parameters.append("t", token)
             parameters.append("s", salt)

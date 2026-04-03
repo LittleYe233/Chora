@@ -1,4 +1,5 @@
 package com.craftworks.music.ui.screens.tv
+
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,8 +10,10 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -20,12 +23,14 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.MediaItem
 import androidx.media3.session.MediaController
 import androidx.navigation.NavController
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import com.craftworks.music.data.model.Screen
 import com.craftworks.music.managers.NavidromeManager
 import com.craftworks.music.player.SongHelper
+import com.craftworks.music.ui.elements.dialogs.tv.SongDialog
 import com.craftworks.music.ui.elements.tv.TvHorizontalSongCard
 import com.craftworks.music.ui.viewmodels.SongsScreenViewModel
 import kotlinx.coroutines.flow.filter
@@ -39,6 +44,9 @@ fun TvSongsScreen(
     viewModel: SongsScreenViewModel = hiltViewModel(),
 ) {
     val songs by viewModel.allSongs.collectAsStateWithLifecycle()
+
+    var selectedSong by remember { mutableStateOf(MediaItem.EMPTY) }
+    var showSongDialog by remember { mutableStateOf(false) }
 
     val coroutineScope = rememberCoroutineScope()
     val gridState = rememberLazyGridState()
@@ -55,7 +63,8 @@ fun TvSongsScreen(
             if (songs.size < 50) return@LaunchedEffect
 
             snapshotFlow {
-                val lastVisible = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: return@snapshotFlow false
+                val lastVisible = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
+                    ?: return@snapshotFlow false
                 val total = gridState.layoutInfo.totalItemsCount
                 if (total < songs.size - 5) return@snapshotFlow false
                 (total - lastVisible) <= 15
@@ -90,8 +99,18 @@ fun TvSongsScreen(
                             launchSingleTop = true
                         }
                     }
+                },
+                onLongClick = {
+                    selectedSong = song
+                    showSongDialog = true
                 }
             )
         }
     }
+
+    if (showSongDialog)
+        SongDialog(
+            song = selectedSong,
+            setShowDialog = { showSongDialog = it }
+        )
 }
