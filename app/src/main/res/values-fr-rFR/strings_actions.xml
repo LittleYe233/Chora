@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common -->
+    <string name="Action_Done">Fait</string>
+    <string name="Action_Remove">Supprimer</string>
+    <string name="Action_Reset">Réinitialiser</string>
+    <string name="Action_Search">Rechercher</string>
+    <string name="Action_Play">Jouer</string>
+    <string name="Action_Shuffle">Mélanger</string>
+    <!-- Navidrome Provider -->
+    <string name="Action_Add">Ajouter</string>
+    <string name="Action_Next">Suivant</string>
+    <string name="Action_Success">Succès</string>
+    <string name="Action_Login">Se connecter</string>
+    <string name="Action_Go">C\'est parti !</string>
+    <string name="Action_Exit">Fermer</string>
+    <!-- Playlists -->
+    <string name="Action_CreatePlaylist">Créer une playlist</string>
+    <string name="Action_Download">Téléchargement</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home -->
+    <string name="welcome_text">Benvenuto</string>
+    <string name="recently_added">Aggiunte Recentemente</string>
+    <string name="most_played">Più Ascoltate</string>
+    <string name="recently_played">Ascoltate Recentemente</string>
+    <string name="random_songs">Esplora La Tua Libreria</string>
+    <!-- Artist Details -->
+    <string name="Screen_Discography">Discografia</string>
+    <string name="Screen_Top_Songs">Canzoni Popolari</string>
+    <!-- Album Details -->
+    <string name="Album_Disc_Number">Disco </string>
+</resources>

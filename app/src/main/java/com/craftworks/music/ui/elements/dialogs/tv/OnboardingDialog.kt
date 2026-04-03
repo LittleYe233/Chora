@@ -266,7 +266,7 @@ private fun OnboardingDoneScreen(
     )
 
     Text(
-        text = "All done! You can now start listening to some tunes!",
+        text = stringResource(R.string.No_Providers_Done),
         modifier = Modifier.width(320.dp),
         textAlign = TextAlign.Center,
         color = MaterialTheme.colorScheme.onBackground,
