@@ -110,6 +110,7 @@ class PlaylistScreenViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             playlistRepository.createPlaylist(name, songstoAdd, addToNavidrome)
+            DataRefreshManager.notifyDataSourcesChanged()
             _isLoading.value = false
             updatePlaylistsImages(context)
             loadPlaylists()
@@ -129,6 +130,7 @@ class PlaylistScreenViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             playlistRepository.deletePlaylist(playlistId)
+            DataRefreshManager.notifyDataSourcesChanged()
             _isLoading.value = false
             loadPlaylists()
         }

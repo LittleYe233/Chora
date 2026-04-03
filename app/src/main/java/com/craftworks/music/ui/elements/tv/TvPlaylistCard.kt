@@ -26,13 +26,17 @@ fun TvPlaylistCard(
     playlist: MediaItem,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
+    onLongClick: () -> Unit = { }
 ) {
     val playlistName = playlist.mediaMetadata.title?.toString() ?: ""
     StandardCardContainer(
         modifier = modifier.width(128.dp),
         imageCard = {
             Card(
-                onClick = onClick, interactionSource = it, content = {
+                onClick = onClick,
+                onLongClick = onLongClick,
+                interactionSource = it,
+                content = {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(playlist.mediaMetadata.artworkUri)

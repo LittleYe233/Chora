@@ -67,33 +67,6 @@ fun TvPlaylistScreen(
         horizontalArrangement = Arrangement.spacedBy(24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        /*
-        item(span = { GridItemSpan(5) }) {
-            TabRow(
-                selectedTabIndex = selectedTabIndex,
-                modifier = Modifier
-                    .focusGroup()
-                    .focusRestorer()
-                    .fillMaxWidth()
-            ) {
-                tabs.forEachIndexed { index, tab ->
-                    key(index) {
-                        Tab(
-                            selected = index == selectedTabIndex,
-                            onFocus = {
-                                selectedTabIndex = index
-
-                            },
-                        ) {
-                            Text(
-                                text = tab
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        */
         item {
             val favouritesPlaylist = MediaItem.Builder()
                 .setMediaId("favourites")
@@ -130,29 +103,11 @@ fun TvPlaylistScreen(
                     navHostController.navigate(Screen.PlaylistDetails.route) {
                         launchSingleTop = true
                     }
+                },
+                onLongClick = {
+                    viewModel.deletePlaylist(playlist.mediaMetadata.extras?.getString("navidromeID") ?: "")
                 }
             )
         }
-
-        /*
-        if (selectedTabIndex == 0) {
-            items(playlists) { playlist ->
-                TvPlaylistCard (
-                    playlist = playlist,
-                    onClick = {
-                        viewModel.setCurrentPlaylist(playlist)
-                        navHostController.navigate(Screen.PlaylistDetails.route) {
-                            launchSingleTop = true
-                        }
-                    }
-                )
-            }
-        }
-        else {
-            item {
-
-            }
-        }
-        */
     }
 }
