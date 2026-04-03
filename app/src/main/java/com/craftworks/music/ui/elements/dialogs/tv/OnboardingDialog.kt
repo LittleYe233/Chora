@@ -146,18 +146,14 @@ fun OnboardingDialog(
                             }
                         }
                     }
-
-                    Box(
-                        Modifier.weight(1f)
-                    ) {
-                        CarouselDefaults.IndicatorRow(
-                            itemCount = OnboardingStep.entries.size,
-                            activeItemIndex = step.ordinal,
-                            modifier = Modifier.align(Alignment.BottomCenter),
-                        )
-                    }
                 }
             }
+
+            CarouselDefaults.IndicatorRow(
+                itemCount = OnboardingStep.entries.size,
+                activeItemIndex = step.ordinal,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
         }
     }
 
