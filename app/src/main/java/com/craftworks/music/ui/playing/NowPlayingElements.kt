@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -158,7 +157,6 @@ fun PlaybackProgressSlider(
         Slider(
             enabled = metadata?.mediaType != MediaMetadata.MEDIA_TYPE_RADIO_STATION,
             modifier = Modifier
-                .padding(horizontal = 32.dp)
                 .fillMaxWidth()
                 .onFocusChanged {
                     focused.value = it.isFocused
@@ -201,7 +199,6 @@ fun PlaybackProgressSlider(
         // Time thingies
         Box(
             modifier = Modifier
-                .padding(horizontal = 32.dp)
                 .fillMaxWidth()
         ) {
             Text(
@@ -289,9 +286,8 @@ fun LyricsButton(
         if (lyrics.isNotEmpty() || loading)
             Modifier
                 .bounceClick()
-                .height(size + 6.dp)
         else
-            Modifier.height(size + 6.dp),
+            Modifier,
         contentPadding = PaddingValues(6.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
@@ -332,6 +328,7 @@ fun PlayQueueButton(
         onClick = { playQueueOpen = true },
         shape = RoundedCornerShape(12.dp),
         contentPadding = PaddingValues(6.dp),
+        modifier = Modifier.bounceClick(),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
             disabledContainerColor = Color.Transparent,
@@ -369,9 +366,8 @@ fun DownloadButton(color: Color, size: Dp, metadata: MediaMetadata?, enabled: Bo
         modifier = if (enabled) // Disable bounce click if song is local
             Modifier
                 .bounceClick()
-                .height(size + 6.dp)
         else
-            Modifier.height(size + 6.dp),
+            Modifier,
         contentPadding = PaddingValues(6.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
