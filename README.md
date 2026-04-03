@@ -33,6 +33,8 @@ A simple and light-weight app that streams music from a Subsonic or Navidrome se
 - In Android Auto, radios do not set metadata correctly.
 
 ## Screenshots
+
+### Mobile
 <p align="center">
     <img src="https://github.com/CraftWorksMC/Chora/blob/master/Github/Images/Now-Playing-Screen.png?raw=true" width=200>
     <img src="https://github.com/CraftWorksMC/Chora/blob/master/Github/Images/Now-Playing-SyncedLyrics.png?raw=true" width=200>
@@ -44,6 +46,16 @@ A simple and light-weight app that streams music from a Subsonic or Navidrome se
     <img src="https://github.com/CraftWorksMC/Chora/blob/master/Github/Images/SongScreen.png?raw=true" width=200>
 </p>
 
+### TV
+<p align="center">
+    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TvNow-Playing-Synced.png?raw=true" width=200>
+    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TvHomeScreen.png?raw=true" width=200>
+    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TvAlbumScreen.png?raw=true" width=200>
+    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TvArtistScreen.png?raw=true" width=200>
+    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TvRadioScreen.png?raw=true" width=200>
+    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TvPlaylistScreen.png?raw=true" width=200>
+    <img src="https://github.com/CraftWorksMC/Chora/blob/android-tv-new-ui/Github/Images/TvSongScreen.png?raw=true" width=200>
+</p>
 
 ## Support the project
 
