@@ -65,6 +65,7 @@ import com.craftworks.music.fadingEdge
 import com.craftworks.music.formatMilliseconds
 import com.craftworks.music.player.SongHelper
 import com.craftworks.music.player.rememberManagedMediaController
+import com.craftworks.music.providers.navidrome.downloadNavidromeAlbum
 import com.craftworks.music.ui.elements.HorizontalSongCard
 import com.craftworks.music.ui.elements.dialogs.dialogFocusable
 import com.craftworks.music.ui.viewmodels.PlaylistScreenViewModel
@@ -79,6 +80,8 @@ fun PlaylistDetails(
     mediaController: MediaController? = rememberManagedMediaController().value,
     viewModel: PlaylistScreenViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+
     val imageFadingEdge = Brush.verticalGradient(listOf(Color.Red, Color.Transparent))
 
     val requester = remember { FocusRequester() }
@@ -171,7 +174,7 @@ fun PlaylistDetails(
                         modifier = Modifier
                             .padding(top = 12.dp, start = 12.dp)
                             .size(32.dp),
-                        contentPadding = PaddingValues(0.dp),
+                        contentPadding = PaddingValues(4.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.background,
                             contentColor = MaterialTheme.colorScheme.onBackground
@@ -179,13 +182,38 @@ fun PlaylistDetails(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            tint = MaterialTheme.colorScheme.onBackground,
+                            tint = MaterialTheme.colorScheme.primary,
                             contentDescription = "Settings",
                             modifier = Modifier
                                 .height(32.dp)
                                 .size(32.dp)
                         )
                     }
+
+                    Button(
+                        onClick = {
+                            coroutineScope.launch {
+                                downloadNavidromeAlbum(context, playlistMetadata?.title.toString(), playlistSongs)
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 12.dp, end = 12.dp)
+                            .size(32.dp),
+                        contentPadding = PaddingValues(4.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.background, contentColor = MaterialTheme.colorScheme.onBackground)
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.rounded_download_24),
+                            contentDescription = "Unstar Album",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .height(28.dp)
+                                .size(28.dp)
+                        )
+                    }
+
                     // Playlist name
                     Column(modifier = Modifier.align(Alignment.BottomCenter)) {
                         Text(

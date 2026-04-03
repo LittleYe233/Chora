@@ -189,7 +189,7 @@ fun ArtistDetails(
                             modifier = Modifier
                                 .padding(top = 12.dp, start = 12.dp)
                                 .size(32.dp),
-                            contentPadding = PaddingValues(0.dp),
+                            contentPadding = PaddingValues(4.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.background,
                                 contentColor = MaterialTheme.colorScheme.onBackground
@@ -197,7 +197,7 @@ fun ArtistDetails(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                tint = MaterialTheme.colorScheme.onBackground,
+                                tint = MaterialTheme.colorScheme.primary,
                                 contentDescription = "Go Back",
                                 modifier = Modifier
                                     .height(32.dp)
