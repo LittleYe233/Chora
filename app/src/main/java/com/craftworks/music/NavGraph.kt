@@ -134,7 +134,7 @@ fun SetupNavGraph(
             }
             val viewModel: HomeScreenViewModel = hiltViewModel(parentEntry)
             if (isTv)
-                TvSideNavigation(navController) {
+                TvSideNavigation(navController, mediaController) {
                     TvHomeScreen(navController, mediaController, viewModel)
                 }
             else
@@ -173,7 +173,7 @@ fun SetupNavGraph(
             }
             val viewModel: SongsScreenViewModel = hiltViewModel(parentEntry)
             if (isTv)
-                TvSideNavigation(navController) {
+                TvSideNavigation(navController, mediaController) {
                     TvSongsScreen(mediaController, navController, viewModel)
                 }
             else
@@ -185,7 +185,7 @@ fun SetupNavGraph(
             }
             val viewModel: RadioScreenViewModel = hiltViewModel(parentEntry)
             if (isTv)
-                TvSideNavigation(navController) {
+                TvSideNavigation(navController, mediaController) {
                     TvRadioScreen(mediaController, navController, viewModel)
                 }
             else
@@ -199,7 +199,7 @@ fun SetupNavGraph(
             }
             val viewModel: AlbumScreenViewModel = hiltViewModel(parentEntry)
             if (isTv)
-                TvSideNavigation(navController) {
+                TvSideNavigation(navController, mediaController) {
                     TvAlbumScreen(navController, viewModel)
                 }
             else
@@ -242,7 +242,7 @@ fun SetupNavGraph(
                 val viewModel: ArtistsScreenViewModel = hiltViewModel(parentEntry)
 
                 if (isTv)
-                    TvSideNavigation(navController) {
+                    TvSideNavigation(navController, mediaController) {
                         TvArtistScreen(navController, viewModel)
                     }
                 else
@@ -270,7 +270,7 @@ fun SetupNavGraph(
                 val viewModel: PlaylistScreenViewModel = hiltViewModel(parentEntry)
 
                 if (isTv)
-                    TvSideNavigation(navController) {
+                    TvSideNavigation(navController, mediaController) {
                         TvPlaylistScreen(navController, viewModel)
                     }
                 else
@@ -293,7 +293,7 @@ fun SetupNavGraph(
         navigation(startDestination = Screen.Setting.route, route = "settings_graph") {
             composable(route = Screen.Setting.route) {
                 if (isTv)
-                    TvSideNavigation(navController) {
+                    TvSideNavigation(navController, mediaController) {
                         TvSettingScreen(navController)
                     }
                 else

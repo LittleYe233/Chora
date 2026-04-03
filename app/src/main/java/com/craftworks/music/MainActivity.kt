@@ -97,6 +97,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.NotificationUtil.IMPORTANCE_LOW
 import androidx.media3.common.util.NotificationUtil.createNotificationChannel
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -384,6 +385,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun TvSideNavigation(
     navController: NavHostController,
+    mediaController: MediaController?,
     content: @Composable () -> Unit
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -489,29 +491,36 @@ fun TvSideNavigation(
                 val isPlayingSelected =
                     Screen.NowPlayingLandscape.route == backStackEntry?.destination?.route
 
-                NavigationDrawerItem(
-                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
-                    selected = isPlayingSelected,
-                    onClick = {
-                        if (!isPlayingSelected) {
-                            navController.navigate(Screen.NowPlayingLandscape.route) {
-                                launchSingleTop = true
-                                restoreState = true
-                                popUpTo(navController.graph.startDestinationId) {
-                                    saveState = true
+                var isPlayingVisible by remember { mutableStateOf(mediaController?.currentMediaItem != null) }
+                LaunchedEffect(mediaController?.mediaMetadata) {
+                    isPlayingVisible = mediaController?.currentMediaItem != null
+                }
+
+                if (isPlayingVisible) {
+                    NavigationDrawerItem(
+                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+                        selected = isPlayingSelected,
+                        onClick = {
+                            if (!isPlayingSelected) {
+                                navController.navigate(Screen.NowPlayingLandscape.route) {
+                                    launchSingleTop = true
+                                    restoreState = true
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        saveState = true
+                                    }
                                 }
                             }
+                        },
+                        leadingContent = {
+                            androidx.tv.material3.Icon(
+                                imageVector = ImageVector.vectorResource(R.drawable.s_m_playback),
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
-                    },
-                    leadingContent = {
-                        androidx.tv.material3.Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.s_m_playback),
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp)
-                        )
+                    ) {
+                        androidx.tv.material3.Text(text = "Playing")
                     }
-                ) {
-                    androidx.tv.material3.Text(text = "Playing")
                 }
 
                 Column(
