@@ -33,6 +33,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -447,6 +449,31 @@ fun TvSideNavigation(
                     .focusGroup(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                NavigationDrawerItem(
+                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+                    selected = Screen.Search.route == backStackEntry?.destination?.route,
+                    onClick = {
+                        if (Screen.Search.route != backStackEntry?.destination?.route) {
+                            navController.navigate(Screen.Search.route) {
+                                launchSingleTop = true
+                                restoreState = true
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                            }
+                        }
+                    },
+                    leadingContent = {
+                        androidx.tv.material3.Icon(
+                            imageVector = Icons.Rounded.Search,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                ) {
+                    androidx.tv.material3.Text(text = "Search")
+                }
+
                 orderedNavItems.forEach { item ->
                     if (!item.enabled) return@forEach
 

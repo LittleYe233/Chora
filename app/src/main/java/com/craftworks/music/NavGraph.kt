@@ -69,6 +69,7 @@ import com.craftworks.music.ui.screens.tv.TvHomeScreen
 import com.craftworks.music.ui.screens.tv.TvPlaylistDetails
 import com.craftworks.music.ui.screens.tv.TvPlaylistScreen
 import com.craftworks.music.ui.screens.tv.TvRadioScreen
+import com.craftworks.music.ui.screens.tv.TvSearchScreen
 import com.craftworks.music.ui.screens.tv.TvSettingScreen
 import com.craftworks.music.ui.screens.tv.TvSongsScreen
 import com.craftworks.music.ui.screens.tv.settings.TvS_AppearanceScreen
@@ -401,6 +402,26 @@ fun SetupNavGraph(
                 navController.navigate(Screen.Home.route) {
                     launchSingleTop = true
                 }
+            }
+        }
+
+        composable(route = Screen.Search.route) { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("main_graph")
+            }
+
+            val albumViewModel: AlbumScreenViewModel = hiltViewModel(parentEntry)
+            val songViewModel: SongsScreenViewModel = hiltViewModel(parentEntry)
+            val artistViewModel: ArtistsScreenViewModel = hiltViewModel(parentEntry)
+
+            TvSideNavigation(navController, mediaController) {
+                TvSearchScreen(
+                    navController,
+                    mediaController,
+                    albumViewModel,
+                    songViewModel,
+                    artistViewModel
+                )
             }
         }
     }
