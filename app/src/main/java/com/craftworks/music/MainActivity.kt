@@ -111,6 +111,7 @@ import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.player.ChoraMediaLibraryService
 import com.craftworks.music.player.rememberManagedMediaController
 import com.craftworks.music.ui.elements.dialogs.NoMediaProvidersDialog
+import com.craftworks.music.ui.elements.dialogs.tv.OnboardingDialog
 import com.craftworks.music.ui.playing.NowPlayingContent
 import com.craftworks.music.ui.playing.NowPlayingMiniPlayer
 import com.craftworks.music.ui.playing.dpToPx
@@ -124,7 +125,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.system.exitProcess
 
-var showNoProviderDialog = mutableStateOf(false)
+var showNoProviderDialog by mutableStateOf(false)
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 @AndroidEntryPoint
@@ -319,9 +320,11 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                if (showNoProviderDialog.value) NoMediaProvidersDialog(
-                    setShowDialog = { showNoProviderDialog.value = it }, navController
-                )
+                if (showNoProviderDialog)
+                    if (isTv)
+                        OnboardingDialog { showNoProviderDialog = false }
+                    else
+                        NoMediaProvidersDialog(setShowDialog = { showNoProviderDialog = it }, navController)
             }
         }
 

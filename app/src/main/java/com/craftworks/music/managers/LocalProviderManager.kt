@@ -42,7 +42,7 @@ object LocalProviderManager {
         sharedPreferences = context.getSharedPreferences("LocalProviderPrefs", Context.MODE_PRIVATE)
         loadFolders()
 
-        if (getAllServers().isEmpty() && _allFolders.value.isEmpty()) showNoProviderDialog.value = true
+        if (getAllServers().isEmpty() && _allFolders.value.isEmpty()) showNoProviderDialog = true
     }
 
     private fun saveFolders() {

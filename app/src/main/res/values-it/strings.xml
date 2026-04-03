@@ -27,6 +27,7 @@
     <string name="Action_Remove">Rimuovi</string>
     <string name="Action_Shuffle">Shuffle</string>
     <string name="Action_Add">Aggiungi</string>
+    <string name="Action_Next">Avanti</string>
     <string name="Action_Success">Successo</string>
     <string name="Action_Login">Accedi</string>
     <string name="Action_Exit">Esci</string>
