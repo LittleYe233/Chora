@@ -1,12 +1,9 @@
 package com.craftworks.music.ui.screens.tv
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,9 +13,13 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,10 +36,9 @@ import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,11 +46,8 @@ import androidx.media3.common.MediaItem
 import androidx.media3.session.MediaController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import androidx.tv.material3.Border
-import androidx.tv.material3.ClickableSurfaceDefaults
-import androidx.tv.material3.LocalContentColor
+import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
-import androidx.tv.material3.Surface
 import androidx.tv.material3.Tab
 import androidx.tv.material3.TabRow
 import androidx.tv.material3.Text
@@ -68,10 +65,11 @@ import com.craftworks.music.ui.viewmodels.SongsScreenViewModel
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
 
+@Preview
 @Composable
 fun TvSearchScreen(
     navHostController: NavHostController = rememberNavController(),
-    mediaController: MediaController?,
+    mediaController: MediaController? = null,
     albumsViewModel: AlbumScreenViewModel = hiltViewModel(),
     songsViewModel: SongsScreenViewModel = hiltViewModel(),
     artistsViewModel: ArtistsScreenViewModel = hiltViewModel()
@@ -92,7 +90,7 @@ fun TvSearchScreen(
         stringResource(R.string.songs),
         stringResource(R.string.Artists)
     )
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
 
     val (searchFocusRequester, focusRequester) = remember { FocusRequester.createRefs() }
     val searchInteractionSource = remember { MutableInteractionSource() }
@@ -101,6 +99,21 @@ fun TvSearchScreen(
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
+
+    val textFieldColors = TextFieldDefaults.colors(
+        focusedContainerColor = MaterialTheme.colorScheme.inverseSurface,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+        cursorColor = MaterialTheme.colorScheme.inverseOnSurface,
+        focusedTextColor = MaterialTheme.colorScheme.inverseOnSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        focusedPlaceholderColor = MaterialTheme.colorScheme.inverseOnSurface,
+        unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        focusedLeadingIconColor = MaterialTheme.colorScheme.inverseOnSurface,
+        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        focusedIndicatorColor = MaterialTheme.colorScheme.inverseSurface,
+        errorTextColor = MaterialTheme.colorScheme.error,
+    )
+
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(5),
@@ -116,82 +129,30 @@ fun TvSearchScreen(
         item(
             span = { GridItemSpan(5) }
         ) {
-            Surface(
-                scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
-                colors = ClickableSurfaceDefaults.colors(
-                    containerColor = MaterialTheme.colorScheme.inverseOnSurface,
-                    focusedContainerColor = MaterialTheme.colorScheme.inverseOnSurface,
-                    pressedContainerColor = MaterialTheme.colorScheme.inverseOnSurface,
-                    focusedContentColor = MaterialTheme.colorScheme.onSurface,
-                    pressedContentColor = MaterialTheme.colorScheme.onSurface
+            TextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
+                singleLine = true,
+                shape = RoundedCornerShape(50),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        albumsViewModel.search(searchQuery)
+                        songsViewModel.search(searchQuery)
+                        artistsViewModel.onSearchQueryChange(searchQuery)
+                    }
                 ),
-                border = ClickableSurfaceDefaults.border(
-                    focusedBorder = Border(
-                        border = BorderStroke(
-                            width = if (isSearchFocused) 2.dp else 1.dp,
-                            color = animateColorAsState(
-                                targetValue = if (isSearchFocused) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.border,
-                                label = ""
-                            ).value
-                        )
+                placeholder = {
+                    Text(stringResource(R.string.Action_Search))
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.Search,
+                        contentDescription = null
                     )
-                ),
-                tonalElevation = 2.dp,
-                modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .padding(top = 8.dp),
-                onClick = { searchFocusRequester.requestFocus() }
-            ) {
-                BasicTextField(
-                    value = searchQuery,
-                    onValueChange = { updatedQuery -> searchQuery = updatedQuery },
-                    decorationBox = {
-                        Box(
-                            modifier = Modifier
-                                .padding(vertical = 16.dp)
-                                .padding(start = 20.dp),
-                        ) {
-                            it()
-                            if (searchQuery.isEmpty()) {
-                                Text(
-                                    modifier = Modifier.graphicsLayer { alpha = 0.6f },
-                                    text = "Anything",
-                                    style = MaterialTheme.typography.titleSmall
-                                )
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            vertical = 4.dp,
-                            horizontal = 8.dp
-                        )
-                        .focusRequester(searchFocusRequester),
-                    cursorBrush = Brush.verticalGradient(
-                        colors = listOf(
-                            LocalContentColor.current,
-                            LocalContentColor.current,
-                        )
-                    ),
-                    keyboardOptions = KeyboardOptions(
-                        autoCorrectEnabled = false,
-                        imeAction = ImeAction.Search
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onSearch = {
-                            albumsViewModel.search(searchQuery)
-                            songsViewModel.search(searchQuery)
-                            artistsViewModel.onSearchQueryChange(searchQuery)
-                        }
-                    ),
-                    maxLines = 1,
-                    textStyle = MaterialTheme.typography.titleSmall.copy(
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                )
-            }
+                },
+                colors = textFieldColors
+            )
         }
 
         item(
