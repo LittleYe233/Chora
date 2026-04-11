@@ -38,6 +38,7 @@ import androidx.tv.material3.Text
 import com.craftworks.music.R
 import com.craftworks.music.data.NavidromeProvider
 import com.craftworks.music.data.repository.LyricsState
+import com.craftworks.music.managers.DataRefreshManager
 import com.craftworks.music.managers.LocalProviderManager
 import com.craftworks.music.managers.NavidromeManager
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
@@ -210,6 +211,7 @@ fun NavidromeProviderCard(
         },
         onLongClick = {
             NavidromeManager.removeServer(server.id)
+            DataRefreshManager.notifyDataSourcesChanged()
         }
     )
 }
@@ -226,6 +228,7 @@ fun LocalProviderCard(
     onClick = { },
     onLongClick = {
         LocalProviderManager.removeFolder(folder)
+        DataRefreshManager.notifyDataSourcesChanged()
     }
 )
 
