@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Navigation -->
-    <string name="songs">Songs</string>
-    <string name="Albums">Albums</string>
-    <string name="Artists">Artists</string>
-    <string name="settings">Settings</string>
-    <string name="radios">Internet Radio</string>
-    <string name="playlists">Playlists</string>
+    <string name="songs">歌曲</string>
+    <string name="Albums">专辑</string>
+    <string name="Artists">艺术家</string>
+    <string name="settings">设置</string>
+    <string name="radios">网络电台</string>
+    <string name="playlists">歌单</string>
 </resources>

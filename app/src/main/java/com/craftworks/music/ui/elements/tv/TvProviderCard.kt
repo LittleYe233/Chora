@@ -100,7 +100,7 @@ fun NavidromeProviderCard(
     server: NavidromeProvider = NavidromeProvider(
         "0",
         "https://demo.navidrome.org",
-        "CraftWorks",
+        "demo",
         "demo",
         enabled = true,
         allowSelfSignedCert = true

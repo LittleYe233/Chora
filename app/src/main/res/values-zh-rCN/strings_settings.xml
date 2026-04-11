@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="Settings_Header_Appearance">Appearance</string>
-    <string name="Setting_Username">Name</string>
-    <string name="Setting_Background">Background Style</string>
-    <string name="Setting_Navbar_Items">Navigation Bar Items</string>
-    <string name="Setting_Home_Items">Home Screen Items</string>
-    <string name="Setting_MoreInfo">Show More Info</string>
-    <string name="Setting_NowPlayingLyricsBlur">Lyrics Blur Effect</string>
-    <string name="Setting_NavidromeLogo">Show Navidrome Logo</string>
-    <string name="Setting_ProviderDividers">Show Provider Dividers</string>
-    <string name="Setting_RefreshAnimation">Show Refresh Animation</string>
-    <string name="Setting_LyricsAnimationSpeed">Lyrics Animation Speed</string>
-    <string name="Setting_TrackNumbersAlbum">Show Track Numbers in Album View</string>
-    <string name="Settings_Header_Media">Media Providers</string>
-    <string name="Settings_Header_Playback">Playback</string>
-    <string name="Setting_Transcoding">Max Bitrate</string>
-    <string name="Setting_Transcoding_Wifi">Max Bitrate (WiFi)</string>
-    <string name="Setting_Transcoding_Data">Max Bitrate (Mobile data)</string>
-    <string name="Setting_Transcoding_Format">Transcoding Format</string>
-    <string name="Setting_Scrobble_Percent">Min. Scrobble Percentage</string>
+    <string name="Settings_Header_Appearance">外观</string>
+    <string name="Setting_Username">名称</string>
+    <string name="Setting_Background">背景样式</string>
+    <string name="Setting_Navbar_Items">导航栏项目</string>
+    <string name="Setting_Home_Items">主页项目</string>
+    <string name="Setting_MoreInfo">显示更多信息</string>
+    <string name="Setting_NowPlayingLyricsBlur">歌词模糊效果</string>
+    <string name="Setting_NavidromeLogo">显示 Navidrome 图标</string>
+    <string name="Setting_ProviderDividers">显示媒体源分隔</string>
+    <string name="Setting_RefreshAnimation">显示刷新动画</string>
+    <string name="Setting_LyricsAnimationSpeed">歌词动画速度</string>
+    <string name="Setting_TrackNumbersAlbum">专辑页显示曲目编号</string>
+    <string name="Settings_Header_Media">媒体源</string>
+    <string name="Settings_Header_Playback">播放</string>
+    <string name="Setting_Transcoding">最高比特率</string>
+    <string name="Setting_Transcoding_Wifi">最高比特率（WiFi）</string>
+    <string name="Setting_Transcoding_Data">最高比特率（移动数据）</string>
+    <string name="Setting_Transcoding_Format">转码格式</string>
+    <string name="Setting_Scrobble_Percent">最低收听记录百分比</string>
     <string name="Setting_Scrobble_Description">Navidrome Only.</string>
 </resources>
