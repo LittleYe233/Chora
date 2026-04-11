@@ -1,6 +1,6 @@
 @file:androidx.annotation.OptIn(UnstableApi::class)
 
-package com.craftworks.music.ui.screens.tv
+package com.craftworks.music.ui.playing.tv
 
 import android.util.Log
 import androidx.compose.animation.core.Spring

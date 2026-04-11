@@ -35,7 +35,7 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
-import com.craftworks.music.ui.screens.tv.TvNowPlaying
+import com.craftworks.music.ui.playing.tv.TvNowPlaying
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
