@@ -51,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -101,7 +102,7 @@ fun LyricsView(
     val coroutineScope = rememberCoroutineScope()
     val visibleItemsInfo by remember { derivedStateOf { state.layoutInfo.visibleItemsInfo } }
 
-    val scrollOffset = dpToPx(128)
+    var scrollOffset = dpToPx(128)
     val interludeHeight = dpToPx(48)
 
     // Update current position only each lyrics change.
@@ -223,6 +224,9 @@ fun LyricsView(
                         .fillMaxHeight()
                 }
                     .padding(paddingValues)
+                    .onSizeChanged { size ->
+                        scrollOffset = (size.height * 0.2f).toInt()
+                    }
                     .verticalFadingEdges(
                         FadingEdgesContentType.Dynamic.Lazy.List(
                             FadingEdgesScrollConfig.Dynamic(),
