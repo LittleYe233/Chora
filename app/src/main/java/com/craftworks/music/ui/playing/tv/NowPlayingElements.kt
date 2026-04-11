@@ -162,14 +162,14 @@ fun PlaybackProgressSlider(
                 .onKeyEvent { keyEvent ->
                     when {
                         keyEvent.key == Key.DirectionRight && keyEvent.type == KeyEventType.KeyDown -> {
-                            currentValue = (currentValue + 5000)
-                            mediaController?.seekTo(currentValue)
+                            //currentValue = (currentValue + 5000)
+                            mediaController?.seekForward()
                             true
                         }
 
                         keyEvent.key == Key.DirectionLeft && keyEvent.type == KeyEventType.KeyDown -> {
-                            currentValue = (currentValue - 5000)
-                            mediaController?.seekTo(currentValue)
+                            //currentValue = (currentValue - 5000)
+                            mediaController?.seekBack()
                             true
                         }
 

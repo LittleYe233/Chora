@@ -118,12 +118,8 @@ fun TvNowPlaying(
                 if (keyEvent.type == KeyEventType.KeyDown) {
                     if (!controlsVisible) {
                         when (keyEvent.nativeKeyEvent.keyCode) {
-                            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
-                                controlsVisible = true
-                                interactionFlow.tryEmit(Unit)
-                                mediaController?.pause()
-                            }
-
+                            KeyEvent.KEYCODE_DPAD_CENTER,
+                            KeyEvent.KEYCODE_ENTER,
                             KeyEvent.KEYCODE_DPAD_DOWN -> {
                                 controlsVisible = true
                                 interactionFlow.tryEmit(Unit)
