@@ -110,10 +110,9 @@ fun TvSearchScreen(
         unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
         focusedLeadingIconColor = MaterialTheme.colorScheme.inverseOnSurface,
         unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        focusedIndicatorColor = MaterialTheme.colorScheme.inverseSurface,
-        errorTextColor = MaterialTheme.colorScheme.error,
+        focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+        unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
     )
-
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(5),
@@ -143,11 +142,15 @@ fun TvSearchScreen(
                     }
                 ),
                 placeholder = {
-                    Text(stringResource(R.string.Action_Search))
+                    Text(
+                        text = stringResource(R.string.Action_Search),
+                        color = androidx.compose.material3.LocalContentColor.current
+                    )
                 },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Rounded.Search,
+                        tint = androidx.compose.material3.LocalContentColor.current,
                         contentDescription = null
                     )
                 },
