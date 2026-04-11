@@ -37,10 +37,8 @@ import com.craftworks.music.ui.elements.dialogs.tv.BackgroundDialog
 import com.craftworks.music.ui.elements.dialogs.tv.HomeItemsDialog
 import com.craftworks.music.ui.elements.dialogs.tv.NameDialog
 import com.craftworks.music.ui.elements.dialogs.tv.NavbarItemsDialog
-import com.craftworks.music.ui.elements.dialogs.tv.NowPlayingTitleAlignmentDialog
 import com.craftworks.music.ui.elements.dialogs.tv.ThemeDialog
 import com.craftworks.music.ui.playing.NowPlayingBackground
-import com.craftworks.music.ui.playing.NowPlayingTitleAlignment
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -147,6 +145,7 @@ fun TvS_AppearanceScreen() {
                     onClick = { showHomeItemsDialog = true }
                 )
 
+                /*
                 // Now Playing Title Alignment
                 val nowPlayingTitleAlignment by AppearanceSettingsManager(context).nowPlayingTitleAlignment.collectAsState(
                     NowPlayingTitleAlignment.LEFT
@@ -166,6 +165,7 @@ fun TvS_AppearanceScreen() {
                     icon = ImageVector.vectorResource(R.drawable.rounded_sort_24),
                     onClick = { showNowPlayingTitleAlignmentDialog = true }
                 )
+                */
             }
         }
 
@@ -342,5 +342,5 @@ fun TvS_AppearanceScreen() {
     if (showThemesDialog) ThemeDialog(setShowDialog = { showThemesDialog = it })
     if (showNavbarItemsDialog) NavbarItemsDialog(setShowDialog = { showNavbarItemsDialog = it })
     if (showHomeItemsDialog) HomeItemsDialog(setShowDialog = { showHomeItemsDialog = it })
-    if (showNowPlayingTitleAlignmentDialog) NowPlayingTitleAlignmentDialog(setShowDialog = { showNowPlayingTitleAlignmentDialog = it })
+    //if (showNowPlayingTitleAlignmentDialog) NowPlayingTitleAlignmentDialog(setShowDialog = { showNowPlayingTitleAlignmentDialog = it })
 }

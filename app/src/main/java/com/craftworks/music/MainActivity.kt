@@ -409,7 +409,7 @@ fun TvSideNavigation(
                 stringResource((R.string.Albums)), R.drawable.rounded_library_music_24, "album_screen"
             ),
             BottomNavItem(
-                stringResource((R.string.songs)), R.drawable.round_music_note_24, "songs_screen"
+                stringResource((R.string.songs)), R.drawable.round_music_note_24, "songs_screen", false
             ),
             BottomNavItem(
                 stringResource((R.string.Artists)), R.drawable.rounded_artist_24, "artists_screen"

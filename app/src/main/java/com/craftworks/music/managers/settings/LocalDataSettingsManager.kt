@@ -14,8 +14,10 @@ import com.craftworks.music.data.model.toMediaItem
 import com.craftworks.music.data.model.toSong
 import com.craftworks.music.dataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -42,10 +44,12 @@ class LocalDataSettingsManager @Inject constructor(
         }
 
     suspend fun saveLocalRadios(radios: List<MediaData.Radio>) {
-        val radiosListJson =
-            Json.encodeToString(radios.filter { it.navidromeID.startsWith("Local_") })
-        context.dataStore.edit { preferences ->
-            preferences[LOCAL_RADIOS] = radiosListJson
+        withContext(NonCancellable) {
+            val radiosListJson =
+                Json.encodeToString(radios.filter { it.navidromeID.startsWith("Local_") })
+            context.dataStore.edit { preferences ->
+                preferences[LOCAL_RADIOS] = radiosListJson
+            }
         }
     }
 
@@ -56,31 +60,38 @@ class LocalDataSettingsManager @Inject constructor(
         }
 
     suspend fun saveLocalPlaylists(playlists: List<MediaData.Playlist>) {
-        val playlistJson =
-            Json.encodeToString(playlists.filter { it.navidromeID.startsWith("Local_") })
-        context.dataStore.edit { preferences ->
-            preferences[LOCAL_PLAYLISTS] = playlistJson
+        withContext(NonCancellable) {
+            val playlistJson =
+                Json.encodeToString(playlists.filter { it.navidromeID.startsWith("Local_") })
+            context.dataStore.edit { preferences ->
+                preferences[LOCAL_PLAYLISTS] = playlistJson
+            }
         }
     }
 
     @UnstableApi
     suspend fun setPlaybackResumption(playlist: List<MediaItem>, currentPos: Int, currentTime: Long) {
-        println(Json.encodeToString(playlist.map { it.toSong() })) // Keeping original debug print
-        context.dataStore.edit { preferences ->
-            preferences[MEDIA_RESUMPTION_PLAYLIST] = Json.encodeToString(playlist.map { it.toSong() })
-            preferences[MEDIA_RESUMPTION_INDEX] = currentPos
-            preferences[MEDIA_RESUMPTION_TIME] = currentTime
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[MEDIA_RESUMPTION_PLAYLIST] =
+                    Json.encodeToString(playlist.map { it.toSong() })
+                preferences[MEDIA_RESUMPTION_INDEX] = currentPos
+                preferences[MEDIA_RESUMPTION_TIME] = currentTime
+            }
         }
     }
 
     @UnstableApi
     val playbackResumptionPlaylistWithStartPosition: Flow<MediaSession.MediaItemsWithStartPosition> = context.dataStore.data.map { preferences ->
-        println(preferences[MEDIA_RESUMPTION_PLAYLIST]) // Keeping original debug print
-        MediaSession.MediaItemsWithStartPosition(
-            Json.decodeFromString<List<MediaData.Song>>(preferences[MEDIA_RESUMPTION_PLAYLIST] ?: "[]").map {it.toMediaItem()},
-            preferences[MEDIA_RESUMPTION_INDEX] ?: 0,
-            preferences[MEDIA_RESUMPTION_TIME] ?: 0L
-        )
+        withContext(NonCancellable) {
+            MediaSession.MediaItemsWithStartPosition(
+                Json.decodeFromString<List<MediaData.Song>>(
+                    preferences[MEDIA_RESUMPTION_PLAYLIST] ?: "[]"
+                ).map { it.toMediaItem() },
+                preferences[MEDIA_RESUMPTION_INDEX] ?: 0,
+                preferences[MEDIA_RESUMPTION_TIME] ?: 0L
+            )
+        }
     }
 
     val sortAlbumOrder: Flow<SortOrder> =
@@ -89,8 +100,10 @@ class LocalDataSettingsManager @Inject constructor(
         }
 
     suspend fun saveSortAlbumOrder(sortOrder: SortOrder) {
-        context.dataStore.edit { preferences ->
-            preferences[SORT_ALBUM_ORDER] = sortOrder.key
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[SORT_ALBUM_ORDER] = sortOrder.key
+            }
         }
     }
 }

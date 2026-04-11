@@ -39,7 +39,6 @@ import com.craftworks.music.R
 import com.craftworks.music.data.BottomNavItem
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.ui.playing.NowPlayingBackground
-import com.craftworks.music.ui.playing.NowPlayingTitleAlignment
 import com.craftworks.music.ui.screens.HomeItem
 import kotlinx.coroutines.launch
 
@@ -227,6 +226,7 @@ fun BackgroundDialog(
     )
 }
 
+/*
 @Preview
 @Composable
 fun NowPlayingTitleAlignmentDialog(
@@ -262,6 +262,7 @@ fun NowPlayingTitleAlignmentDialog(
         }
     )
 }
+*/
 
 @Composable
 fun NavbarItemsDialog(setShowDialog: (Boolean) -> Unit) {
@@ -291,7 +292,7 @@ fun NavbarItemsDialog(setShowDialog: (Boolean) -> Unit) {
                         ), BottomNavItem(
                             "Albums", R.drawable.rounded_library_music_24, "album_screen"
                         ), BottomNavItem(
-                            "Songs", R.drawable.round_music_note_24, "songs_screen"
+                            "Songs", R.drawable.round_music_note_24, "songs_screen", false
                         ), BottomNavItem(
                             "Artists", R.drawable.rounded_artist_24, "artists_screen"
                         ), BottomNavItem(

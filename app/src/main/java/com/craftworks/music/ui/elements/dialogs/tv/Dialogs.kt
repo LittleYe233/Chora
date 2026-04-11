@@ -1,5 +1,6 @@
 package com.craftworks.music.ui.elements.dialogs.tv
 
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +19,7 @@ import androidx.tv.material3.OutlinedButton
 import androidx.tv.material3.RadioButton
 import androidx.tv.material3.Text
 import com.craftworks.music.R
+import com.craftworks.music.ui.playing.NowPlayingBackground
 
 @Composable
 fun <T> GenericListDialog(
@@ -27,7 +29,7 @@ fun <T> GenericListDialog(
     selectedOption: T,
     onOptionSelected: (T) -> Unit,
     label: @Composable (T) -> String,
-    helperText: (T) -> String = { "" }
+    helperText: (T) -> String = { "" },
 ) {
     AlertDialog(
         onDismissRequest = { setShowDialog(false) },
@@ -48,6 +50,7 @@ fun <T> GenericListDialog(
 
                     ListItem(
                         selected = isSelected,
+                        enabled = !(option == NowPlayingBackground.ANIMATED_BLUR && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU),
                         headlineContent = {
                             Text(label(option) + helperText(option))
                         },
