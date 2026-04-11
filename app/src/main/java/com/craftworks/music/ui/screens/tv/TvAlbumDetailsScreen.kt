@@ -61,13 +61,13 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.craftworks.music.R
 import com.craftworks.music.data.model.Screen
 import com.craftworks.music.formatMilliseconds
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.player.SongHelper
-import com.craftworks.music.ui.elements.GenrePill
 import com.craftworks.music.ui.elements.dialogs.tv.SongDialog
 import com.craftworks.music.ui.elements.tv.TvHorizontalSongCard
 import com.craftworks.music.ui.viewmodels.AlbumDetailsViewModel
@@ -142,11 +142,11 @@ fun TvAlbumDetails(
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(selectedAlbumImage)
-                        .diskCacheKey(selectedAlbumId)
+                        .data(selectedAlbumImage.toString().replace("size=128", "size=500"))
+                        .diskCachePolicy(CachePolicy.DISABLED)
+                        .placeholderMemoryCacheKey(selectedAlbumImage.toString())
                         .crossfade(true)
                         .build(),
-                    placeholder = painterResource(R.drawable.placeholder),
                     fallback = painterResource(R.drawable.placeholder),
                     contentScale = ContentScale.Crop,
                     contentDescription = currentAlbum[0].mediaMetadata.title?.toString(),
@@ -157,7 +157,7 @@ fun TvAlbumDetails(
 
                 // Title
                 Column(
-                    verticalArrangement = Arrangement.SpaceEvenly
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
                         text = currentAlbum[0].mediaMetadata.title?.toString() ?: "",
@@ -184,18 +184,15 @@ fun TvAlbumDetails(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // Genre pills
+                    // Genres
                     if (!currentAlbum[0].mediaMetadata.genre.isNullOrEmpty()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            currentAlbum[0].mediaMetadata.genre
-                                ?.split(",")
-                                ?.forEach { GenrePill(it.trim()) }
-                        }
+                        Text(
+                            text = currentAlbum[0].mediaMetadata.genre.toString(),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
 

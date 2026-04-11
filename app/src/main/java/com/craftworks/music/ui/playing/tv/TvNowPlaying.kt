@@ -120,7 +120,8 @@ fun TvNowPlaying(
                         when (keyEvent.nativeKeyEvent.keyCode) {
                             KeyEvent.KEYCODE_DPAD_CENTER,
                             KeyEvent.KEYCODE_ENTER,
-                            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                            KeyEvent.KEYCODE_DPAD_DOWN,
+                            KeyEvent.KEYCODE_DPAD_UP -> {
                                 controlsVisible = true
                                 interactionFlow.tryEmit(Unit)
                             }
@@ -132,6 +133,8 @@ fun TvNowPlaying(
                             KeyEvent.KEYCODE_DPAD_RIGHT -> {
                                 mediaController?.seekForward()
                             }
+
+                            else -> return@onKeyEvent false
                         }
                         return@onKeyEvent true
                     }
@@ -162,10 +165,10 @@ fun TvNowPlaying(
                                 model = ImageRequest.Builder(LocalContext.current)
                                     .data(metadata?.artworkUri.toString().replace("size=128", "size=500"))
                                     .diskCachePolicy(CachePolicy.DISABLED)
+                                    .placeholderMemoryCacheKey(metadata?.artworkUri.toString())
                                     .crossfade(true)
                                     .build(),
                                 contentDescription = "Album Cover Art",
-                                placeholder = painterResource(R.drawable.placeholder),
                                 fallback = painterResource(R.drawable.placeholder),
                                 contentScale = ContentScale.FillWidth,
                                 modifier = Modifier
@@ -270,7 +273,8 @@ fun TvNowPlaying(
                         .onKeyEvent { keyEvent ->
                             if (keyEvent.type == KeyEventType.KeyDown) {
                                 if (controlsVisible) {
-                                    if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                                    if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_DPAD_UP ||
+                                        keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_BACK) {
                                         controlsVisible = false
                                         return@onKeyEvent true
                                     }

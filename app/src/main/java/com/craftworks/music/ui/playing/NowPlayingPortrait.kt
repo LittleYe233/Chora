@@ -116,9 +116,8 @@ fun NowPlayingPortrait(
                     SubcomposeAsyncImage(
                         model = ImageRequest.Builder(context)
                             .data(artworkUri)
-                            .diskCachePolicy(
-                                CachePolicy.DISABLED
-                            )
+                            .placeholderMemoryCacheKey(metadata?.artworkUri.toString())
+                            .diskCachePolicy(CachePolicy.DISABLED)
                             .build(),
                         contentDescription = "Album Cover Art",
                         contentScale = ContentScale.Crop,

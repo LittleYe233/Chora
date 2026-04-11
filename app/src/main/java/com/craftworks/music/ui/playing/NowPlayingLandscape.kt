@@ -88,13 +88,11 @@ fun NowPlayingLandscape(
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(metadata?.artworkUri.toString().replace("size=128", "size=500"))
+                            .placeholderMemoryCacheKey(metadata?.artworkUri.toString())
                             .crossfade(true)
-                            .diskCachePolicy(
-                                CachePolicy.DISABLED
-                            )
+                            .diskCachePolicy(CachePolicy.DISABLED)
                             .build(),
                         contentDescription = "Album Cover Art",
-                        placeholder = painterResource(R.drawable.placeholder),
                         fallback = painterResource(R.drawable.placeholder),
                         contentScale = ContentScale.FillWidth,
                         alignment = Alignment.Center,
@@ -116,13 +114,11 @@ fun NowPlayingLandscape(
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(metadata?.artworkUri.toString().replace("size=128", "size=500"))
-                            .diskCachePolicy(
-                                CachePolicy.DISABLED
-                            )
+                            .placeholderMemoryCacheKey(metadata?.artworkUri.toString())
+                            .diskCachePolicy(CachePolicy.DISABLED)
                             .crossfade(true)
                             .build(),
                         contentDescription = "Album Cover Art",
-                        placeholder = painterResource(R.drawable.placeholder),
                         fallback = painterResource(R.drawable.placeholder),
                         contentScale = ContentScale.FillWidth,
                         alignment = Alignment.Center,
@@ -264,9 +260,8 @@ fun NowPlayingLandscape(
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(metadata?.artworkUri.toString().replace("size=128", "size=500"))
-                            .diskCachePolicy(
-                                CachePolicy.DISABLED
-                            )
+                            .placeholderMemoryCacheKey(metadata?.artworkUri.toString())
+                            .diskCachePolicy(CachePolicy.DISABLED)
                             .crossfade(true)
                             .build(),
                         contentDescription = "Album Cover Art",
