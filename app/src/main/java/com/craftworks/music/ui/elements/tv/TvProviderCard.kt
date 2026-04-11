@@ -41,6 +41,7 @@ import com.craftworks.music.data.repository.LyricsState
 import com.craftworks.music.managers.LocalProviderManager
 import com.craftworks.music.managers.NavidromeManager
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
+import com.craftworks.music.managers.settings.MediaProviderSettingsManager
 import kotlinx.coroutines.launch
 
 @Composable
@@ -117,7 +118,8 @@ fun NavidromeProviderCard(
     ListItem(
         modifier = Modifier
             .focusProperties {
-                down = if (libraries.size > 1 && server.id == currentServerId) librariesFocus else FocusRequester.Default
+                down =
+                    if (libraries.size > 1 && server.id == currentServerId) librariesFocus else FocusRequester.Default
             }
             .focusRequester(mainFocus),
         selected = checked,
@@ -231,21 +233,40 @@ fun LocalProviderCard(
 fun LrcLibProviderCard(
     url: String,
     onLongClick: () -> Unit = { }
-) = ProviderItem(
-    icon = R.drawable.lrclib_logo,
-    title = "LRCLIB",
-    subtitle = url,
-    enabled = LyricsState.useLrcLib,
-    onClick = { LyricsState.useLrcLib = !LyricsState.useLrcLib },
-    onLongClick = onLongClick
-)
+) {
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    ProviderItem(
+        icon = R.drawable.lrclib_logo,
+        title = "LRCLIB",
+        subtitle = url,
+        enabled = LyricsState.useLrcLib,
+        onClick = {
+            LyricsState.useLrcLib = !LyricsState.useLrcLib
+            coroutineScope.launch {
+                MediaProviderSettingsManager(context).setUseLrcLib(LyricsState.useLrcLib)
+            }
+        },
+        onLongClick = onLongClick
+    )
+}
 
 @Preview
 @Composable
-fun NetEaseProviderCard() = ProviderItem(
-    icon = R.drawable.netease_cloud_music,
-    title = "NetEase",
-    subtitle = "Lyrics",
-    enabled = LyricsState.useNetEase,
-    onClick = { LyricsState.useNetEase = !LyricsState.useNetEase },
-)
+fun NetEaseProviderCard() {
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    ProviderItem(
+        icon = R.drawable.netease_cloud_music,
+        title = "NetEase",
+        subtitle = "Lyrics",
+        enabled = LyricsState.useNetEase,
+        onClick = {
+            LyricsState.useNetEase = !LyricsState.useNetEase
+            coroutineScope.launch {
+                MediaProviderSettingsManager(context).setUseNetEase(LyricsState.useNetEase)
+            }
+        },
+    )
+}

@@ -7,9 +7,7 @@ import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -104,7 +102,7 @@ fun TvNowPlaying(
 
     val bottomPadding by animateIntAsState(
         targetValue = if (controlsVisible) dpToPx(64) else 0,
-        animationSpec = tween(1000, 0, FastOutSlowInEasing),
+        animationSpec = tween(600, 0, FastOutSlowInEasing),
         label = "Move content up with controls visible"
     )
 
@@ -113,26 +111,31 @@ fun TvNowPlaying(
             .padding(horizontal = 48.dp, vertical = 24.dp)
             .focusable(true)
             .onKeyEvent { keyEvent ->
-                if (keyEvent.type == KeyEventType.KeyDown && !controlsVisible) {
-                    when (keyEvent.nativeKeyEvent.keyCode) {
-                        KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
-                            controlsVisible = true
-                            mediaController?.pause()
-                        }
+                if (keyEvent.type == KeyEventType.KeyDown) {
+                    if (!controlsVisible) {
+                        when (keyEvent.nativeKeyEvent.keyCode) {
+                            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                                controlsVisible = true
+                                mediaController?.pause()
+                            }
 
-                        KeyEvent.KEYCODE_DPAD_DOWN -> {
-                            controlsVisible = true
-                        }
+                            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                                controlsVisible = true
+                            }
 
-                        KeyEvent.KEYCODE_DPAD_LEFT -> {
-                            mediaController?.seekBack()
-                        }
+                            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                                mediaController?.seekBack()
+                            }
 
-                        KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                            mediaController?.seekForward()
+                            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                                mediaController?.seekForward()
+                            }
                         }
+                        return@onKeyEvent true
                     }
-                    return@onKeyEvent true
+                    else {
+                        controlsVisible = true
+                    }
                 }
                 false
             },
@@ -228,20 +231,13 @@ fun TvNowPlaying(
         AnimatedVisibility(
             visible = controlsVisible,
             enter = fadeIn(
-                animationSpec = tween(durationMillis = 400)
+                animationSpec = tween(durationMillis = 300)
             ) + slideInVertically(
-                initialOffsetY = { it / 2 },
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
-                    stiffness = Spring.StiffnessLow
-                )
+                initialOffsetY = { it },
+                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
             ) + scaleIn(
-                initialScale = 0.9f,
+                initialScale = 0.8f,
                 transformOrigin = TransformOrigin(0.5f, 1f),
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
-                    stiffness = Spring.StiffnessLow
-                )
             ),
             exit = fadeOut(
                 animationSpec = tween(durationMillis = 300)
@@ -269,7 +265,18 @@ fun TvNowPlaying(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .focusGroup(),
+                        .focusGroup()
+                        .onKeyEvent { keyEvent ->
+                            if (keyEvent.type == KeyEventType.KeyDown) {
+                                if (controlsVisible) {
+                                    if (keyEvent.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                                        controlsVisible = false
+                                        return@onKeyEvent true
+                                    }
+                                }
+                            }
+                            false
+                        },
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
