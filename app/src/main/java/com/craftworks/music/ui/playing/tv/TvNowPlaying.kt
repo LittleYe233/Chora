@@ -74,8 +74,11 @@ import com.craftworks.music.ui.playing.LyricsView
 import com.craftworks.music.ui.playing.dpToPx
 import com.craftworks.music.ui.screens.tv.requestFocusOnFirstGainingVisibility
 import com.gigamole.composefadingedges.marqueeHorizontalFadingEdges
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.debounce
 
+@kotlin.OptIn(FlowPreview::class)
 @Preview(device = "id:tv_1080p", showBackground = true, showSystemUi = true)
 @Composable
 fun TvNowPlaying(
@@ -87,11 +90,12 @@ fun TvNowPlaying(
     val lyrics by LyricsState.lyrics.collectAsStateWithLifecycle()
 
     // Auto-hide after 5 seconds of visibility
-    LaunchedEffect(controlsVisible) {
-        if (controlsVisible) {
-            delay(5000)
-            controlsVisible = false
-        }
+    val interactionFlow = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
+
+    LaunchedEffect(Unit) {
+        interactionFlow
+            .debounce(5000)
+            .collect { controlsVisible = false }
     }
 
     val iconTextColor by animateColorAsState(
@@ -116,11 +120,13 @@ fun TvNowPlaying(
                         when (keyEvent.nativeKeyEvent.keyCode) {
                             KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
                                 controlsVisible = true
+                                interactionFlow.tryEmit(Unit)
                                 mediaController?.pause()
                             }
 
                             KeyEvent.KEYCODE_DPAD_DOWN -> {
                                 controlsVisible = true
+                                interactionFlow.tryEmit(Unit)
                             }
 
                             KeyEvent.KEYCODE_DPAD_LEFT -> {
@@ -132,9 +138,6 @@ fun TvNowPlaying(
                             }
                         }
                         return@onKeyEvent true
-                    }
-                    else {
-                        controlsVisible = true
                     }
                 }
                 false
@@ -187,13 +190,15 @@ fun TvNowPlaying(
                         )
                     },
                     subtitle = {
-                        Text(
-                            text = metadata?.albumTitle.toString()  + if (metadata?.recordingYear != 0) " • " + metadata?.recordingYear else "",
-                            color = iconTextColor,
-                            maxLines = 1,
-                            modifier = Modifier
-                                .marqueeHorizontalFadingEdges(marqueeProvider = { Modifier.basicMarquee() })
-                        )
+                        if (metadata?.albumTitle != null && metadata.recordingYear != null) {
+                            Text(
+                                text = metadata.albumTitle.toString()  + if (metadata.recordingYear != 0) " • " + metadata.recordingYear else "",
+                                color = iconTextColor,
+                                maxLines = 1,
+                                modifier = Modifier
+                                    .marqueeHorizontalFadingEdges(marqueeProvider = { Modifier.basicMarquee() })
+                            )
+                        }
                     },
                     description = {
                         Text(
@@ -273,6 +278,7 @@ fun TvNowPlaying(
                                         controlsVisible = false
                                         return@onKeyEvent true
                                     }
+                                    interactionFlow.tryEmit(Unit)
                                 }
                             }
                             false
