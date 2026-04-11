@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -84,11 +85,16 @@ fun LyricsView(
     val lyrics by LyricsState.lyrics.collectAsStateWithLifecycle()
     val loading by LyricsState.loading.collectAsStateWithLifecycle()
 
-    val useBlur by AppearanceSettingsManager(LocalContext.current).nowPlayingLyricsBlurFlow.collectAsState(true)
-    val lyricsAnimationSpeed by AppearanceSettingsManager(LocalContext.current).lyricsAnimationSpeedFlow.collectAsState(100)
+    val useBlur by AppearanceSettingsManager(LocalContext.current).nowPlayingLyricsBlurFlow.collectAsState(
+        true
+    )
+    val lyricsAnimationSpeed by AppearanceSettingsManager(LocalContext.current).lyricsAnimationSpeedFlow.collectAsState(
+        100
+    )
 
     // State holding the current position
-    val currentPosition = remember { mutableIntStateOf(mediaController?.currentPosition?.toInt() ?: 0) }
+    val currentPosition =
+        remember { mutableIntStateOf(mediaController?.currentPosition?.toInt() ?: 0) }
     val currentLyricIndex = remember { mutableIntStateOf(-1) }
 
     val state = rememberLazyListState()
@@ -140,35 +146,36 @@ fun LyricsView(
     // Lyric index updates and scrolling
     LaunchedEffect(currentPosition.intValue, lyrics) {
         //if (mediaController?.isPlaying == true) {
-            val newCurrentLyricIndex = lyrics.indexOfFirst { it.timestamp > (currentPosition.intValue + lyricsAnimationSpeed / 2) }
+        val newCurrentLyricIndex =
+            lyrics.indexOfFirst { it.timestamp > (currentPosition.intValue + lyricsAnimationSpeed / 2) }
                 .takeIf { it >= 0 } ?: lyrics.size
 
-            val targetIndex = (newCurrentLyricIndex - 1).coerceAtLeast(-1)
+        val targetIndex = (newCurrentLyricIndex - 1).coerceAtLeast(-1)
 
-            if (targetIndex != currentLyricIndex.intValue) {
-                currentLyricIndex.intValue = targetIndex
+        if (targetIndex != currentLyricIndex.intValue) {
+            currentLyricIndex.intValue = targetIndex
 
-                coroutineScope.launch {
-                    val targetItemAfter = state.layoutInfo.visibleItemsInfo.firstOrNull { it.index == targetIndex }
+            coroutineScope.launch {
+                val targetItemAfter =
+                    state.layoutInfo.visibleItemsInfo.firstOrNull { it.index == targetIndex }
 
-                    if (targetItemAfter != null) {
-                        var finalScrollDelta = targetItemAfter.offset - scrollOffset
+                if (targetItemAfter != null) {
+                    var finalScrollDelta = targetItemAfter.offset - scrollOffset
 
-                        if (lyrics[(targetIndex - 1).coerceAtLeast(0)].content[0] == "")
-                            finalScrollDelta -= interludeHeight
+                    if (lyrics[(targetIndex - 1).coerceAtLeast(0)].content[0] == "")
+                        finalScrollDelta -= interludeHeight
 
-                        state.animateScrollBy(
-                            value = finalScrollDelta.toFloat(),
-                            animationSpec = tween(lyricsAnimationSpeed, 0, FastOutSlowInEasing)
-                        )
-                    }
-                    else
-                        state.animateScrollToItem(
-                            index = targetIndex.coerceAtLeast(0),
-                            scrollOffset = -scrollOffset
-                        )
-                }
+                    state.animateScrollBy(
+                        value = finalScrollDelta.toFloat(),
+                        animationSpec = tween(lyricsAnimationSpeed, 0, FastOutSlowInEasing)
+                    )
+                } else
+                    state.animateScrollToItem(
+                        index = targetIndex.coerceAtLeast(0),
+                        scrollOffset = -scrollOffset
+                    )
             }
+        }
         //}
     }
 
@@ -194,23 +201,17 @@ fun LyricsView(
         loading
     ) {
         if (it) {
-            Box(modifier = if (isLandscape) {
-                Modifier
-                    .widthIn(min = 256.dp)
-                    .fillMaxHeight()
-            } else {
-                Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                LoadingIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = color
+                )
             }
-                .padding(paddingValues)) {
-                    LoadingIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = color
-                    )
-                }
-        }
-        else {
+        } else {
             LazyColumn(
                 modifier = if (isLandscape) {
                     Modifier
@@ -223,7 +224,10 @@ fun LyricsView(
                 }
                     .padding(paddingValues)
                     .verticalFadingEdges(
-                        FadingEdgesContentType.Dynamic.Lazy.List(FadingEdgesScrollConfig.Dynamic(), state),
+                        FadingEdgesContentType.Dynamic.Lazy.List(
+                            FadingEdgesScrollConfig.Dynamic(),
+                            state
+                        ),
                         FadingEdgesGravity.All,
                         96.dp
                     ),
@@ -251,8 +255,7 @@ fun LyricsView(
                             }
                         )
                     }
-                }
-                else if (lyrics.isNotEmpty()) {
+                } else if (lyrics.isNotEmpty()) {
                     item {
                         Text(
                             text = lyrics[0].content[0],
@@ -306,32 +309,33 @@ fun SyncedLyricItem(
             targetState = currentLyricIndex == index
         ) {
             if (it) {
-                Box(modifier = Modifier
-                    .focusable(false)
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                    },
+                Box(
+                    modifier = Modifier
+                        .focusable(false)
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     InterludeIndicator(color)
                 }
             }
         }
-    }
-    else {
-        Column(modifier = Modifier
-            .padding(vertical = 12.dp)
-            .heightIn(min = 48.dp)
-            .focusable(false)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .blur(lyricBlur)
-            .clickable {
-                onClick()
-            },
+    } else {
+        Column(
+            modifier = Modifier
+                .padding(vertical = 12.dp)
+                .heightIn(min = 48.dp)
+                .focusable(false)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .blur(lyricBlur)
+                .clickable {
+                    onClick()
+                },
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceEvenly
             //contentAlignment = Alignment.Center

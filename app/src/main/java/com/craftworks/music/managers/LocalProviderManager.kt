@@ -17,12 +17,13 @@ object LocalProviderManager {
 
     fun addFolder(folder: String) {
         Log.d("NAVIDROME", "Added server $folder")
-        _allFolders.value = _allFolders.value + folder
+        if (_allFolders.value.contains(folder)) return
+        _allFolders.value += folder
         saveFolders()
     }
 
     fun removeFolder(folder: String) {
-        _allFolders.value = _allFolders.value - folder
+        _allFolders.value -= folder
         saveFolders()
     }
 
@@ -41,12 +42,12 @@ object LocalProviderManager {
         sharedPreferences = context.getSharedPreferences("LocalProviderPrefs", Context.MODE_PRIVATE)
         loadFolders()
 
-        if (getAllServers().isEmpty() && _allFolders.value.isEmpty()) showNoProviderDialog.value = true
+        if (getAllServers().isEmpty() && _allFolders.value.isEmpty()) showNoProviderDialog = true
     }
 
     private fun saveFolders() {
         DataRefreshManager.notifyDataSourcesChanged()
-        val serversJson = json.encodeToString(_allFolders.value as List<String>)
+        val serversJson = json.encodeToString(_allFolders.value)
         sharedPreferences.edit { putString(PREF_FOLDERS, serversJson) }
     }
 
@@ -54,7 +55,7 @@ object LocalProviderManager {
         val foldersJson = sharedPreferences.getString(PREF_FOLDERS, null)
         if (foldersJson != null) {
             val loadedServers: List<String> = json.decodeFromString(foldersJson)
-            _allFolders.value = _allFolders.value + loadedServers
+            _allFolders.value = loadedServers.distinct()
         }
     }
 }

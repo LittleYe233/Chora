@@ -131,7 +131,7 @@ object NavidromeManager {
         sharedPreferences = context.getSharedPreferences("NavidromePrefs", Context.MODE_PRIVATE)
         loadServers()
 
-        if (getAllServers().isEmpty() && getAllFolders().isEmpty()) showNoProviderDialog.value = true
+        if (getAllServers().isEmpty() && getAllFolders().isEmpty()) showNoProviderDialog = true
 
         setSyncingStatus(false)
     }

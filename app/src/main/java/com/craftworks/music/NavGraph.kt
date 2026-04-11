@@ -61,6 +61,20 @@ import com.craftworks.music.ui.screens.SongsScreen
 import com.craftworks.music.ui.screens.settings.S_AppearanceScreen
 import com.craftworks.music.ui.screens.settings.S_PlaybackScreen
 import com.craftworks.music.ui.screens.settings.S_ProviderScreen
+import com.craftworks.music.ui.screens.tv.TvAlbumDetails
+import com.craftworks.music.ui.screens.tv.TvAlbumScreen
+import com.craftworks.music.ui.screens.tv.TvArtistDetailsScreen
+import com.craftworks.music.ui.screens.tv.TvArtistScreen
+import com.craftworks.music.ui.screens.tv.TvHomeScreen
+import com.craftworks.music.ui.screens.tv.TvPlaylistDetails
+import com.craftworks.music.ui.screens.tv.TvPlaylistScreen
+import com.craftworks.music.ui.screens.tv.TvRadioScreen
+import com.craftworks.music.ui.screens.tv.TvSearchScreen
+import com.craftworks.music.ui.screens.tv.TvSettingScreen
+import com.craftworks.music.ui.screens.tv.TvSongsScreen
+import com.craftworks.music.ui.screens.tv.settings.TvS_AppearanceScreen
+import com.craftworks.music.ui.screens.tv.settings.TvS_PlaybackScreen
+import com.craftworks.music.ui.screens.tv.settings.TvS_ProviderScreen
 import com.craftworks.music.ui.viewmodels.AlbumScreenViewModel
 import com.craftworks.music.ui.viewmodels.ArtistsScreenViewModel
 import com.craftworks.music.ui.viewmodels.HomeScreenViewModel
@@ -77,6 +91,8 @@ fun SetupNavGraph(
     mediaController: MediaController?
 ) {
     val context = LocalContext.current
+    val isTv = LocalConfiguration.current.uiMode and
+            Configuration.UI_MODE_TYPE_MASK == Configuration.UI_MODE_TYPE_TELEVISION
 
     playlistList =
         LocalDataSettingsManager(context).localPlaylists.collectAsStateWithLifecycle(mutableListOf()).value
@@ -87,10 +103,12 @@ fun SetupNavGraph(
     LyricsState.useNetEase =
         MediaProviderSettingsManager(context).netEaseLyricsFlow.collectAsStateWithLifecycle(true).value
 
-    val leftPadding = if (LocalConfiguration.current.orientation != Configuration.ORIENTATION_LANDSCAPE) 0.dp else 80.dp + WindowInsets.safeDrawing.asPaddingValues().calculateLeftPadding(
+    val leftPadding = if (LocalConfiguration.current.orientation != Configuration.ORIENTATION_LANDSCAPE || isTv) 0.dp else 80.dp + WindowInsets.safeDrawing.asPaddingValues().calculateLeftPadding(
         LayoutDirection.Ltr)
 
     val animationSpec = MaterialTheme.LocalMotionScheme.current.slowSpatialSpec<Float>()
+
+
 
     NavHost(
         navController = navController,
@@ -116,7 +134,12 @@ fun SetupNavGraph(
                 navController.getBackStackEntry("main_graph")
             }
             val viewModel: HomeScreenViewModel = hiltViewModel(parentEntry)
-            HomeScreen(navController, mediaController, viewModel)
+            if (isTv)
+                TvSideNavigation(navController, mediaController) {
+                    TvHomeScreen(navController, mediaController, viewModel)
+                }
+            else
+                HomeScreen(navController, mediaController, viewModel)
         }
         composable(
             route = Screen.HomeLists.route + "/{category}",
@@ -150,14 +173,24 @@ fun SetupNavGraph(
                 navController.getBackStackEntry("main_graph")
             }
             val viewModel: SongsScreenViewModel = hiltViewModel(parentEntry)
-            SongsScreen(mediaController, viewModel)
+            if (isTv)
+                TvSideNavigation(navController, mediaController) {
+                    TvSongsScreen(mediaController, navController, viewModel)
+                }
+            else
+                SongsScreen(mediaController, viewModel)
         }
         composable(route = Screen.Radio.route) { backStackEntry ->
             val parentEntry = remember(backStackEntry) {
                 navController.getBackStackEntry("main_graph")
             }
             val viewModel: RadioScreenViewModel = hiltViewModel(parentEntry)
-            RadioScreen(mediaController, viewModel)
+            if (isTv)
+                TvSideNavigation(navController, mediaController) {
+                    TvRadioScreen(mediaController, navController, viewModel)
+                }
+            else
+                RadioScreen(mediaController, viewModel)
         }
 
         //Albums
@@ -166,7 +199,12 @@ fun SetupNavGraph(
                 navController.getBackStackEntry("main_graph")
             }
             val viewModel: AlbumScreenViewModel = hiltViewModel(parentEntry)
-            AlbumScreen(navController, mediaController, viewModel)
+            if (isTv)
+                TvSideNavigation(navController, mediaController) {
+                    TvAlbumScreen(navController, viewModel)
+                }
+            else
+                AlbumScreen(navController, mediaController, viewModel)
         }
         composable(
             route = Screen.AlbumDetails.route + "/{album}/{image}",
@@ -181,12 +219,20 @@ fun SetupNavGraph(
         ) { backStackEntry ->
             val albumId = backStackEntry.arguments?.getString("album") ?: ""
             val albumImageUri = URLDecoder.decode(backStackEntry.arguments?.getString("image"), "UTF-8")
-            AlbumDetails(
-                albumId,
-                albumImageUri.toUri(),
-                navController,
-                mediaController,
-            )
+            if (isTv)
+                TvAlbumDetails(
+                    albumId,
+                    albumImageUri.toUri(),
+                    mediaController,
+                    navController
+                )
+            else
+                AlbumDetails(
+                    albumId,
+                    albumImageUri.toUri(),
+                    navController,
+                    mediaController,
+                )
         }
         //Artist
         navigation(startDestination = Screen.Artists.route, route = "artists_graph") {
@@ -195,14 +241,24 @@ fun SetupNavGraph(
                     navController.getBackStackEntry("main_graph")
                 }
                 val viewModel: ArtistsScreenViewModel = hiltViewModel(parentEntry)
-                ArtistsScreen(navController, viewModel)
+
+                if (isTv)
+                    TvSideNavigation(navController, mediaController) {
+                        TvArtistScreen(navController, viewModel)
+                    }
+                else
+                    ArtistsScreen(navController, viewModel)
             }
             composable(route = Screen.ArtistDetails.route) { backStackEntry ->
                 val parentEntry = remember(backStackEntry) {
                     navController.getBackStackEntry("main_graph")
                 }
                 val viewModel: ArtistsScreenViewModel = hiltViewModel(parentEntry)
-                ArtistDetails(navController, mediaController, viewModel)
+
+                if (isTv)
+                    TvArtistDetailsScreen(navController, mediaController, viewModel)
+                else
+                    ArtistDetails(navController, mediaController, viewModel)
             }
         }
 
@@ -213,7 +269,13 @@ fun SetupNavGraph(
                     navController.getBackStackEntry("main_graph")
                 }
                 val viewModel: PlaylistScreenViewModel = hiltViewModel(parentEntry)
-                PlaylistScreen(navController, viewModel)
+
+                if (isTv)
+                    TvSideNavigation(navController, mediaController) {
+                        TvPlaylistScreen(navController, viewModel)
+                    }
+                else
+                    PlaylistScreen(navController, viewModel)
             }
             composable(route = Screen.PlaylistDetails.route) { backStackEntry ->
                 val parentEntry = remember(backStackEntry) {
@@ -221,14 +283,22 @@ fun SetupNavGraph(
                 }
                 val viewModel: PlaylistScreenViewModel = hiltViewModel(parentEntry)
 
-                PlaylistDetails(navController, mediaController, viewModel)
+                if (isTv)
+                    TvPlaylistDetails(navController, mediaController, viewModel)
+                else
+                    PlaylistDetails(navController, mediaController, viewModel)
             }
         }
 
         //Settings
         navigation(startDestination = Screen.Setting.route, route = "settings_graph") {
             composable(route = Screen.Setting.route) {
-                SettingScreen(navController)
+                if (isTv)
+                    TvSideNavigation(navController, mediaController) {
+                        TvSettingScreen(navController)
+                    }
+                else
+                    SettingScreen(navController)
             }
             composable(
                 route = Screen.S_Appearance.route,
@@ -243,7 +313,10 @@ fun SetupNavGraph(
                     } + fadeOut(animationSpec)
                 }
             ) {
-                S_AppearanceScreen(navController)
+                if (isTv)
+                    TvS_AppearanceScreen()
+                else
+                    S_AppearanceScreen(navController)
             }
             composable(
                 route = Screen.S_Providers.route,
@@ -258,7 +331,10 @@ fun SetupNavGraph(
                     } + fadeOut(animationSpec)
                 }
             ) {
-                S_ProviderScreen(navController)
+                if (isTv)
+                    TvS_ProviderScreen()
+                else
+                    S_ProviderScreen(navController)
             }
             composable(
                 route = Screen.S_Playback.route,
@@ -273,7 +349,10 @@ fun SetupNavGraph(
                     } + fadeOut(tween(300))
                 }
             ) {
-                S_PlaybackScreen(navController)
+                if (isTv)
+                    TvS_PlaybackScreen()
+                else
+                    S_PlaybackScreen(navController)
             }
         }
 
@@ -323,6 +402,26 @@ fun SetupNavGraph(
                 navController.navigate(Screen.Home.route) {
                     launchSingleTop = true
                 }
+            }
+        }
+
+        composable(route = Screen.Search.route) { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("main_graph")
+            }
+
+            val albumViewModel: AlbumScreenViewModel = hiltViewModel(parentEntry)
+            val songViewModel: SongsScreenViewModel = hiltViewModel(parentEntry)
+            val artistViewModel: ArtistsScreenViewModel = hiltViewModel(parentEntry)
+
+            TvSideNavigation(navController, mediaController) {
+                TvSearchScreen(
+                    navController,
+                    mediaController,
+                    albumViewModel,
+                    songViewModel,
+                    artistViewModel
+                )
             }
         }
     }

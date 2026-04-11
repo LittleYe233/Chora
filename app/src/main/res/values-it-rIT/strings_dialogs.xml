@@ -14,6 +14,7 @@
     <!-- Provider Dialog -->
     <string name="Dialog_Media_Source">Fonte Media</string>
     <string name="No_Providers_Splash">Non hai aggiunto nessun media provider. Aggiungine uno ora per iniziare ad ascoltare!</string>
+    <string name="No_Providers_Done">Tutto fatto! Ora puoi iniziare ad ascoltare a della buona musica!</string>
     <string name="Source_Local">Cartella Locale</string>
     <!-- Local -->
     <string name="Label_Local_Directory">Percorso:</string>

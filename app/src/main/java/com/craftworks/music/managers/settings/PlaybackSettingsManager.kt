@@ -6,8 +6,10 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.craftworks.music.dataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -27,8 +29,10 @@ class PlaybackSettingsManager @Inject constructor(
     }
 
     suspend fun setWifiTranscodingBitrate(bitrate: String) {
-        context.dataStore.edit { preferences ->
-            preferences[TRANSCODING_BITRATE_WIFI_KEY] = bitrate
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[TRANSCODING_BITRATE_WIFI_KEY] = bitrate
+            }
         }
     }
 
@@ -37,8 +41,10 @@ class PlaybackSettingsManager @Inject constructor(
     }
 
     suspend fun setMobileDataTranscodingBitrate(bitrate: String) {
-        context.dataStore.edit { preferences ->
-            preferences[TRANSCODING_BITRATE_DATA_KEY] = bitrate
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[TRANSCODING_BITRATE_DATA_KEY] = bitrate
+            }
         }
     }
 
@@ -47,8 +53,10 @@ class PlaybackSettingsManager @Inject constructor(
     }
 
     suspend fun setTranscodingFormat(format: String) {
-        context.dataStore.edit { preferences ->
-            preferences[TRANSCODING_FORMAT_KEY] = format
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[TRANSCODING_FORMAT_KEY] = format
+            }
         }
     }
 
@@ -57,8 +65,10 @@ class PlaybackSettingsManager @Inject constructor(
     }
 
     suspend fun setScrobblePercent(scrobblePercent: Int) {
-        context.dataStore.edit { preferences ->
-            preferences[SCROBBLE_PERCENT_KEY] = scrobblePercent
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[SCROBBLE_PERCENT_KEY] = scrobblePercent
+            }
         }
     }
 }

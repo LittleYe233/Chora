@@ -6,8 +6,10 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.craftworks.music.dataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,8 +28,10 @@ class MediaProviderSettingsManager @Inject constructor(
     }
 
     suspend fun setLrcLibEndpoint(LrcLibEndpoint: String) {
-        context.dataStore.edit { preferences ->
-            preferences[LRCLIB_ENDPOINT] = LrcLibEndpoint
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[LRCLIB_ENDPOINT] = LrcLibEndpoint
+            }
         }
     }
 
@@ -36,8 +40,10 @@ class MediaProviderSettingsManager @Inject constructor(
     }
 
     suspend fun setUseLrcLib(useLrcLib: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[LRCLIB_LYRICS] = useLrcLib
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[LRCLIB_LYRICS] = useLrcLib
+            }
         }
     }
 
@@ -46,8 +52,10 @@ class MediaProviderSettingsManager @Inject constructor(
     }
 
     suspend fun setUseNetEase(useNetEase: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[NETEASE_LYRICS] = useNetEase
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[NETEASE_LYRICS] = useNetEase
+            }
         }
     }
 }

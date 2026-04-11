@@ -24,6 +24,7 @@ data class LrcLibLyrics(
 // NetEase Lyrics
 @Serializable
 data class NeteaseLyricsResponse(
+    val pureMusic: Boolean? = false,
     val lrc: NeteaseLrc? = null,
     val tlyric: NeteaseLrc? = null   // translation, may be absent or empty
 )
@@ -33,8 +34,7 @@ data class NeteaseLrc(
     val lyric: String? = null
 )
 
-//region Convert proprietary lyric format to app format.
-
+//region Convert lyric format to app format.
 fun MediaData.PlainLyrics.toLyric(): Lyric {
     return Lyric(
         timestamp = -1,
@@ -66,7 +66,6 @@ fun LrcLibLyrics.toLyrics(): List<Lyric> {
             raw.add(Pair(time, lyricText))
         }
 
-        // Group lines sharing the same timestamp
         return raw
             .groupBy { it.first }
             .map { (time, lines) -> Lyric(time, lines.map { it.second }) }
@@ -81,6 +80,9 @@ fun LrcLibLyrics.toLyrics(): List<Lyric> {
 }
 
 fun NeteaseLyricsResponse.toLyrics(): List<Lyric> {
+    if (pureMusic == true)
+        return emptyList()
+
     val originalMap = mutableMapOf<Int, String>()
     val translationMap = mutableMapOf<Int, String>()
 

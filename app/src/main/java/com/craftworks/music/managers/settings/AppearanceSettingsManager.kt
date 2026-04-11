@@ -13,8 +13,10 @@ import com.craftworks.music.ui.playing.NowPlayingBackground
 import com.craftworks.music.ui.playing.NowPlayingTitleAlignment
 import com.craftworks.music.ui.screens.HomeItem
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -49,30 +51,33 @@ class AppearanceSettingsManager @Inject constructor(
     }
 
     suspend fun setUsername(username: String) {
-        context.dataStore.edit { preferences ->
-            preferences[USERNAME_KEY] = username
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[USERNAME_KEY] = username
+            }
         }
     }
 
     val npBackgroundFlow: Flow<NowPlayingBackground> = context.dataStore.data.map { preferences ->
         try {
             NowPlayingBackground.valueOf(
-                preferences[NP_BACKGROUND_KEY] ?:
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                    NowPlayingBackground.ANIMATED_BLUR.name
-                else
-                    NowPlayingBackground.STATIC_BLUR.name
+                preferences[NP_BACKGROUND_KEY]
+                    ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        NowPlayingBackground.ANIMATED_BLUR.name
+                    else
+                        NowPlayingBackground.STATIC_BLUR.name
             )
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             println(e.message)
             NowPlayingBackground.STATIC_BLUR
         }
     }
 
     suspend fun setBackgroundType(backgroundType: NowPlayingBackground) {
-        context.dataStore.edit { preferences ->
-            preferences[NP_BACKGROUND_KEY] = backgroundType.name
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[NP_BACKGROUND_KEY] = backgroundType.name
+            }
         }
     }
 
@@ -81,8 +86,10 @@ class AppearanceSettingsManager @Inject constructor(
     }
 
     suspend fun setShowMoreInfo(showMoreInfo: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[SHOW_MORE_INFO_KEY] = showMoreInfo
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[SHOW_MORE_INFO_KEY] = showMoreInfo
+            }
         }
     }
 
@@ -92,8 +99,10 @@ class AppearanceSettingsManager @Inject constructor(
     }
 
     suspend fun setNowPlayingLyricsBlur(blur: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[NOW_PLAYING_LYRIC_BLUR_KEY] = blur
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[NOW_PLAYING_LYRIC_BLUR_KEY] = blur
+            }
         }
     }
 
@@ -102,8 +111,10 @@ class AppearanceSettingsManager @Inject constructor(
     }
 
     suspend fun setShowNavidromeLogo(showNavidromeLogo: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[SHOW_NAVIDROME_KEY] = showNavidromeLogo
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[SHOW_NAVIDROME_KEY] = showNavidromeLogo
+            }
         }
     }
 
@@ -117,16 +128,17 @@ class AppearanceSettingsManager @Inject constructor(
         )
         try {
             jsonString?.let { Json.decodeFromString<List<HomeItem>>(it) } ?: defaultValue
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             println(e.message)
             defaultValue
         }
     }
 
     suspend fun setHomeItems(items: List<HomeItem>) {
-        context.dataStore.edit { preferences ->
-            preferences[HOME_ITEMS_KEY] = Json.encodeToString(items)
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[HOME_ITEMS_KEY] = Json.encodeToString(items)
+            }
         }
     }
 
@@ -142,16 +154,17 @@ class AppearanceSettingsManager @Inject constructor(
         )
         try {
             jsonString?.let { Json.decodeFromString<List<BottomNavItem>>(it) } ?: defaultValue
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             println(e.message)
             defaultValue
         }
     }
 
     suspend fun setBottomNavItems(items: List<BottomNavItem>) {
-        context.dataStore.edit { preferences ->
-            preferences[BOTTOM_NAV_ITEMS_KEY] = Json.encodeToString(items)
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[BOTTOM_NAV_ITEMS_KEY] = Json.encodeToString(items)
+            }
         }
     }
 
@@ -160,8 +173,10 @@ class AppearanceSettingsManager @Inject constructor(
     }
 
     suspend fun setAppTheme(theme: AppTheme) {
-        context.dataStore.edit { preferences ->
-            preferences[APP_THEME] = theme.name
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[APP_THEME] = theme.name
+            }
         }
     }
 
@@ -170,8 +185,10 @@ class AppearanceSettingsManager @Inject constructor(
     }
 
     suspend fun setShowProviderDividers(showDividers: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[SHOW_PROVIDER_DIVIDERS] = showDividers
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[SHOW_PROVIDER_DIVIDERS] = showDividers
+            }
         }
     }
 
@@ -180,8 +197,10 @@ class AppearanceSettingsManager @Inject constructor(
     }
 
     suspend fun setLyricsAnimationSpeed(speed: Int) {
-        context.dataStore.edit { preferences ->
-            preferences[LYRICS_ANIMATION_SPEED] = speed
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[LYRICS_ANIMATION_SPEED] = speed
+            }
         }
     }
 
@@ -191,8 +210,10 @@ class AppearanceSettingsManager @Inject constructor(
     }
 
     suspend fun setUseRefreshAnimation(useRefreshAnimation: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[USE_REFRESH_ANIMATION] = useRefreshAnimation
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[USE_REFRESH_ANIMATION] = useRefreshAnimation
+            }
         }
     }
 
@@ -201,20 +222,25 @@ class AppearanceSettingsManager @Inject constructor(
     }
 
     suspend fun setShowTrackNumbers(showTrackNumbers: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[SHOW_TRACK_NUMBERS] = showTrackNumbers
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[SHOW_TRACK_NUMBERS] = showTrackNumbers
+            }
         }
     }
 
-    val nowPlayingTitleAlignment: Flow<NowPlayingTitleAlignment> = context.dataStore.data.map { preferences ->
-        NowPlayingTitleAlignment.valueOf(
-            preferences[NP_TITLE_ALIGNMENT] ?: NowPlayingTitleAlignment.LEFT.name
-        )
-    }
+    val nowPlayingTitleAlignment: Flow<NowPlayingTitleAlignment> =
+        context.dataStore.data.map { preferences ->
+            NowPlayingTitleAlignment.valueOf(
+                preferences[NP_TITLE_ALIGNMENT] ?: NowPlayingTitleAlignment.LEFT.name
+            )
+        }
 
     suspend fun setNowPlayingTitleAlignment(nowPlayingTitleAlignment: NowPlayingTitleAlignment) {
-        context.dataStore.edit { preferences ->
-            preferences[NP_TITLE_ALIGNMENT] = nowPlayingTitleAlignment.name
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[NP_TITLE_ALIGNMENT] = nowPlayingTitleAlignment.name
+            }
         }
     }
 }

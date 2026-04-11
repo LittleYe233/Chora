@@ -14,6 +14,7 @@
     <!-- Provider Dialog -->
     <string name="Dialog_Media_Source">Source de médias</string>
     <string name="No_Providers_Splash">Aucune source de médias pour le moment. Pour commencer la lecture, ajoutez-en une !</string>
+    <string name="No_Providers_Done">Terminé! Vous pouvez maintenant commencer à écouter des musiques!</string>
     <string name="Source_Local">Fichiers locaux</string>
     <!-- Local -->
     <string name="Label_Local_Directory">Dossier:</string>

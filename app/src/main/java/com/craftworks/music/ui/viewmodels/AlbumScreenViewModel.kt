@@ -13,7 +13,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -38,16 +37,9 @@ class AlbumScreenViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             localDataSettingsManager.sortAlbumOrder.collect { sortOrder ->
-                if (_sortOrder.value != sortOrder) {
-                    _sortOrder.value = sortOrder
-                    getAlbums() // Refresh albums if the sort order changes
-                }
+                _sortOrder.value = sortOrder
+                getAlbums()
             }
-        }
-
-        viewModelScope.launch {
-            _sortOrder.value = localDataSettingsManager.sortAlbumOrder.first()
-            getAlbums()
 
             DataRefreshManager.dataSourceChangedEvent.collect {
                 getAlbums()
@@ -61,7 +53,7 @@ class AlbumScreenViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             coroutineScope {
-                val allAlbumsDeferred = async { albumRepository.getAlbums(_sortOrder.value.key, 20, 0, true) }
+                val allAlbumsDeferred = async { albumRepository.getAlbums(_sortOrder.value.key, 50, 0, true) }
 
                 _allAlbums.value = allAlbumsDeferred.await().sortedByDescending {
                     it.mediaMetadata.extras?.getString("navidromeID")!!.startsWith("Local_")
@@ -76,6 +68,7 @@ class AlbumScreenViewModel @Inject constructor(
     }
 
     fun getMoreAlbums(size: Int){
+        println("GETTING MORE ALBUMS")
         viewModelScope.launch {
             coroutineScope {
                 val albumOffset = _allAlbums.value.size
