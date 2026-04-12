@@ -1,0 +1,7 @@
+Rifatta completamente la UI per Android TV, con navigazione e tema appropriati.
+Perfezionato lo shader dello sfondo animato.
+Aggiunto NetEase per i testi, con supporto per testi su più righe.
+Aggiunto Crowdin per le traduzioni.
+Aggiunta la traduzione in cinese semplificato da parte di @LittleYe233.
+Le schede di Android Auto ora seguono le impostazioni della barra di navigazione.
+Risolto il problema con l'aggiunta dei server Navidrome, migliorata la gestione degli errori.

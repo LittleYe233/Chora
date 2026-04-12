@@ -1,0 +1,1 @@
+Listen to music from Subsonic or Navidrome servers.

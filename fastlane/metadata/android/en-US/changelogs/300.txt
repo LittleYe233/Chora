@@ -1,0 +1,7 @@
+Overhauled Android TV to use material-3-tv components, with proper navigation and theme
+Added NetEase as a lyrics source, with support for multi-line lyrics
+Added Crowdin for translations
+Added Simplified Chinese translation
+Make Android Auto tabs follow navbar settings
+Fixed adding Navidrome servers, better error handling
+Tweaked animated background shader
