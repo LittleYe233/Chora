@@ -2,4 +2,4 @@ Simple open-source app to stream music from your own Subsonic or Navidrome serve
 
 Chora has a very simple and modern UI, following Material 3 guidelines, and a native Android TV UI, with support for Android Auto aswell.
 
-**Important: Chora does not provide any music by itself. It's merely a front-end for Subsonic servers and/or local storage, meaning the end user has to provide the music files.**
+Important: Chora does not provide any music by itself. It's merely a front-end for Subsonic servers and/or local storage, meaning the end user has to provide the music files.
