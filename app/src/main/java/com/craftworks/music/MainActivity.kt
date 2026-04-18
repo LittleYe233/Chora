@@ -125,7 +125,6 @@ import com.gigamole.composefadingedges.verticalFadingEdges
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.Locale
-import kotlin.system.exitProcess
 
 var showNoProviderDialog by mutableStateOf(false)
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -200,20 +199,8 @@ class MainActivity : ComponentActivity() {
 
                 if (isTv) {
                     // Set background color to colorScheme.background
-                    window.decorView.setBackgroundColor(
-                        androidx.tv.material3.MaterialTheme.colorScheme.background.toArgb()
-                    )
-                    /*
-                    TvSideNavigation(
-                        navController = navController
-                    ) {
-                        SetupNavGraph(
-                            navController = navController,
-                            bottomPadding = 0.dp,
-                            mediaController = mediaController
-                        )
-                    }
-                    */
+                    window.decorView.setBackgroundColor(androidx.tv.material3.MaterialTheme.colorScheme.background.toArgb())
+
                     SetupNavGraph(
                         navController = navController,
                         bottomPadding = 0.dp,
@@ -221,9 +208,8 @@ class MainActivity : ComponentActivity() {
                     )
                 } else {
                     // Set background color to colorScheme.background
-                    window.decorView.setBackgroundColor(
-                        MaterialTheme.colorScheme.background.toArgb()
-                    )
+                    window.decorView.setBackgroundColor(MaterialTheme.colorScheme.background.toArgb())
+
                     val backCallback = object : OnBackPressedCallback(false) {
                         override fun handleOnBackPressed() {
                             coroutineScope.launch {
@@ -233,6 +219,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     onBackPressedDispatcher.addCallback(this, backCallback)
+
                     Scaffold(
                         bottomBar = {
                             AnimatedBottomNavBar(navController, scaffoldState)
@@ -240,7 +227,7 @@ class MainActivity : ComponentActivity() {
                         contentColor = MaterialTheme.colorScheme.onBackground,
                         containerColor = Color.Transparent
                     ) { paddingValues ->
-                        if ((LocalConfiguration.current.uiMode and Configuration.UI_MODE_TYPE_MASK != Configuration.UI_MODE_TYPE_TELEVISION) && LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                        if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
                             BottomSheetScaffold(
                                 sheetContainerColor = Color.Transparent,
                                 containerColor = Color.Transparent,
@@ -427,7 +414,6 @@ fun TvSideNavigation(
         modifier = Modifier.fillMaxSize(),
         drawerState = drawerState,
         drawerContent = {
-            val isClosed = it == DrawerValue.Closed
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -478,7 +464,15 @@ fun TvSideNavigation(
                     if (!item.enabled) return@forEach
 
                     val isSelected = item.screenRoute == backStackEntry?.destination?.route
-
+                    val icon = when (item.screenRoute) {
+                        "home_screen"    -> R.drawable.rounded_home_24
+                        "album_screen"   -> R.drawable.rounded_library_music_24
+                        "songs_screen"   -> R.drawable.round_music_note_24
+                        "artists_screen" -> R.drawable.rounded_artist_24
+                        "radio_screen"   -> R.drawable.rounded_radio
+                        "playlist_screen"-> R.drawable.placeholder
+                        else             -> R.drawable.placeholder
+                    }
                     NavigationDrawerItem(
                         modifier = Modifier
                             .padding(vertical = 4.dp, horizontal = 8.dp)
@@ -508,7 +502,7 @@ fun TvSideNavigation(
                         },
                         leadingContent = {
                             androidx.tv.material3.Icon(
-                                imageVector = ImageVector.vectorResource(item.icon),
+                                imageVector = ImageVector.vectorResource(icon),
                                 contentDescription = item.title,
                                 modifier = Modifier.size(24.dp)
                             )
@@ -661,9 +655,18 @@ fun AnimatedBottomNavBar(
         NavigationBar(modifier = Modifier.offset { IntOffset(x = 0, y = -yTrans) }) {
             orderedNavItems.forEachIndexed { _, item ->
                 if (!item.enabled) return@forEachIndexed
+
+                val icon = when (item.screenRoute) {
+                    "home_screen"    -> R.drawable.rounded_home_24
+                    "album_screen"   -> R.drawable.rounded_library_music_24
+                    "songs_screen"   -> R.drawable.round_music_note_24
+                    "artists_screen" -> R.drawable.rounded_artist_24
+                    "radio_screen"   -> R.drawable.rounded_radio
+                    "playlist_screen"-> R.drawable.placeholder
+                    else             -> R.drawable.placeholder
+                }
                 NavigationBarItem(
                     selected = item.screenRoute == backStackEntry?.destination?.route,
-                    //modifier = Modifier.bounceClick(),
                     onClick = {
                         if (item.screenRoute == backStackEntry?.destination?.route) return@NavigationBarItem
                         navController.navigate(item.screenRoute) {
@@ -676,7 +679,7 @@ fun AnimatedBottomNavBar(
                     label = { Text(text = item.title) },
                     alwaysShowLabel = false,
                     icon = {
-                        Icon(ImageVector.vectorResource(item.icon), contentDescription = item.title)
+                        Icon(ImageVector.vectorResource(icon), contentDescription = null)
                     })
             }
         }
@@ -695,6 +698,16 @@ fun AnimatedBottomNavBar(
             ) {
                 items(orderedNavItems) { item ->
                     if (!item.enabled) return@items
+
+                    val icon = when (item.screenRoute) {
+                        "home_screen"    -> R.drawable.rounded_home_24
+                        "album_screen"   -> R.drawable.rounded_library_music_24
+                        "songs_screen"   -> R.drawable.round_music_note_24
+                        "artists_screen" -> R.drawable.rounded_artist_24
+                        "radio_screen"   -> R.drawable.rounded_radio
+                        "playlist_screen"-> R.drawable.placeholder
+                        else             -> R.drawable.placeholder
+                    }
                     NavigationRailItem(
                         selected = item.screenRoute == backStackEntry?.destination?.route,
                         onClick = {
@@ -709,7 +722,7 @@ fun AnimatedBottomNavBar(
                         label = { Text(text = item.title) },
                         alwaysShowLabel = false,
                         icon = {
-                            Icon(ImageVector.vectorResource(item.icon), contentDescription = item.title)
+                            Icon(ImageVector.vectorResource(icon), contentDescription = null)
                         },
                     )
                 }
@@ -735,24 +748,6 @@ fun AnimatedBottomNavBar(
                         },
                     )
                 }
-            }
-            // Show the exit button only on TV
-            if (LocalConfiguration.current.uiMode and Configuration.UI_MODE_TYPE_MASK == Configuration.UI_MODE_TYPE_TELEVISION) {
-                NavigationRailItem(
-                    selected = false,
-                    onClick = {
-                        (context as Activity).finish()
-                        exitProcess(0)
-                    },
-                    label = { Text(stringResource(R.string.Action_Exit)) },
-                    alwaysShowLabel = false,
-                    icon = {
-                        Icon(
-                            ImageVector.vectorResource(R.drawable.round_power_settings_new_24),
-                            contentDescription = "Exit App"
-                        )
-                    },
-                )
             }
         }
     }
