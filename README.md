@@ -10,17 +10,14 @@ A simple and light-weight app that streams music from a Subsonic or Navidrome se
 
 - Subsonic/Navidrome support.
 - Android Auto.
+- Android TV.
 - Material 3 UI.
 - Download songs and albums from server.
-- Internet Radio. [Metadata only from IceCast servers]
-- Synced And Unsynced Lyrics. [From lrclib.net or self-hosted instance]
+- Internet Radio.
+- Synced And Unsynced Lyrics. [From lrclib.net or self-hosted instance and NetEase]
 - Navidrome and Local playlists.
 - Multiple Navidrome libraries.
 - Transcoding.
-
-## W.I.P
-
-- Better Android TV navigation.
 
 ## Roadmap
 
