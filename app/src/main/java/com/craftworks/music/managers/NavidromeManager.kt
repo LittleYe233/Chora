@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 
 object NavidromeManager {
@@ -39,19 +38,21 @@ object NavidromeManager {
 
     private val _syncStatus = MutableStateFlow(false)
 
-    fun addServer(server: NavidromeProvider, isPing: Boolean = false) {
+    suspend fun addServer(server: NavidromeProvider, isPing: Boolean = false) {
         Log.d("NAVIDROME", "Added server $server")
+        server.url = if (!server.url.trim().startsWith("http"))
+            "http://" + server.url.trim()
+        else
+            server.url.trim()
+
         servers[server.id] = server
         _currentServerId.value = server.id
 
         if (isPing)
             return
 
-        val fetchedLibraries = runBlocking {
-            NavidromeDataSource().getNavidromeLibraries().map {
-                Pair(it, true)
-            }
-        }
+        val fetchedLibraries = NavidromeDataSource().getNavidromeLibraries().map { Pair(it, true) }
+
         setServerLibraries(server.id, fetchedLibraries)
         if (server.id == _currentServerId.value) {
             _libraries.value = fetchedLibraries

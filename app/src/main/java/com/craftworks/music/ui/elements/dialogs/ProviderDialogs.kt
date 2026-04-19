@@ -356,21 +356,22 @@ fun CreateMediaProviderDialog(
                         if (it) {
                             Button(
                                 onClick = {
-                                    val server = NavidromeProvider(
-                                        url,
-                                        url,
-                                        username,
-                                        password,
-                                        true,
-                                        allowCerts
-                                    )
-                                    NavidromeManager.addServer(server)
-                                    runBlocking {
+                                    coroutineScope.launch {
+                                        val server = NavidromeProvider(
+                                            url,
+                                            url,
+                                            username,
+                                            password,
+                                            true,
+                                            allowCerts
+                                        )
+                                        NavidromeManager.addServer(server)
                                         AppearanceSettingsManager(context).setUsername(username)
-                                    }
 
-                                    navidromeStatus.value = ""
-                                    setShowDialog(false)
+                                        navidromeStatus.value = ""
+
+                                        setShowDialog(false)
+                                    }
                                 },
                                 modifier = Modifier
                                     .height(50.dp)

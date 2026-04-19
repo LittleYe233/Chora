@@ -67,7 +67,7 @@ fun NowPlayingContent(
     if (backgroundStyle == NowPlayingBackground.PLAIN)
         backgroundDarkMode = isSystemInDarkTheme()
 
-    LaunchedEffect(metadata?.artworkUri) {
+    LaunchedEffect(metadata?.artworkUri, backgroundStyle) {
         if (metadata?.artworkUri != null && backgroundStyle != NowPlayingBackground.PLAIN) {
             val palette = extractColorsFromUri(metadata.artworkUri.toString(), context)
 

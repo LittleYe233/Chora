@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import com.craftworks.music.data.NavidromeProvider
 import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
 import com.craftworks.music.managers.NavidromeManager
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -13,10 +15,19 @@ import kotlinx.serialization.json.jsonObject
 
 var navidromeStatus = mutableStateOf("")
 
-suspend fun getNavidromeStatus(server: NavidromeProvider){
-    NavidromeManager.addServer(server, true)
-    NavidromeDataSource().pingNavidromeServer()
-    NavidromeManager.removeServer(server.id, true)
+suspend fun getNavidromeStatus(server: NavidromeProvider) {
+    withContext(NonCancellable) {
+        try {
+            NavidromeManager.addServer(server, true)
+            NavidromeDataSource().pingNavidromeServer()
+        }
+        catch (ex: Exception) {
+            navidromeStatus.value = ex.message.toString()
+        }
+        finally {
+            NavidromeManager.removeServer(server.id, true)
+        }
+    }
 }
 
 @Serializable

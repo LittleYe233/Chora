@@ -129,6 +129,7 @@ class NavidromeDataSource @Inject constructor() {
             musicFolderIds?.forEach { parameters.append("musicFolderId", it.toString()) }
             parameters.append("v", "1.16.1")
             parameters.append("c", "Chora")
+            parameters.append("f", "json")
         }.buildString()
 
         NavidromeManager.setSyncingStatus(true)
@@ -211,7 +212,7 @@ class NavidromeDataSource @Inject constructor() {
         musicFolderIds: List<Int>? = NavidromeManager.getEnabledLibraryIdsForCurrentServer()
     ): List<MediaItem> = withContext(Dispatchers.IO) {
         getRequest(
-            "getAlbumList.view?type=$sort&size=$size&offset=$offset&f=json",
+            "getAlbumList.view?type=$sort&size=$size&offset=$offset",
             musicFolderIds,
             ignoreCachedResponse
         ).filterIsInstance<MediaItem>()
@@ -221,7 +222,7 @@ class NavidromeDataSource @Inject constructor() {
         albumId: String, ignoreCachedResponse: Boolean = false
     ): List<MediaItem>? = withContext(Dispatchers.IO) {
         getRequest(
-            "getAlbum.view?id=${albumId}&f=json",
+            "getAlbum.view?id=${albumId}",
             null,
             ignoreCachedResponse
         ).filterIsInstance<MediaItem>()
@@ -233,7 +234,7 @@ class NavidromeDataSource @Inject constructor() {
         musicFolderIds: List<Int>? = NavidromeManager.getEnabledLibraryIdsForCurrentServer(),
     ): List<MediaItem> = withContext(Dispatchers.IO) {
         getRequest(
-            "search3.view?query=$query&songCount=0&songOffset=0&artistCount=0&albumCount=100&f=json",
+            "search3.view?query=$query&songCount=0&songOffset=0&artistCount=0&albumCount=100",
             musicFolderIds,
             ignoreCachedResponse
         ).filterIsInstance<MediaItem>()
@@ -248,7 +249,7 @@ class NavidromeDataSource @Inject constructor() {
         musicFolderIds: List<Int>? = NavidromeManager.getEnabledLibraryIdsForCurrentServer(),
     ): List<MediaItem> = withContext(Dispatchers.IO) {
         getRequest(
-            "search3.view?query=$query&songCount=$songCount&songOffset=$songOffset&artistCount=0&albumCount=0&f=json",
+            "search3.view?query=$query&songCount=$songCount&songOffset=$songOffset&artistCount=0&albumCount=0",
             musicFolderIds,
             ignoreCachedResponse
         ).filterIsInstance<MediaItem>()
@@ -258,7 +259,7 @@ class NavidromeDataSource @Inject constructor() {
         songId: String, ignoreCachedResponse: Boolean = false
     ): MediaItem? = withContext(Dispatchers.IO) {
         getRequest(
-            "getSong.view?id=$songId&f=json",
+            "getSong.view?id=$songId",
             null,
             ignoreCachedResponse
         ).filterIsInstance<MediaItem>().firstOrNull()
@@ -288,7 +289,7 @@ class NavidromeDataSource @Inject constructor() {
         artistId: String, ignoreCachedResponse: Boolean = false
     ): List<MediaItem> = withContext(Dispatchers.IO) {
         getRequest(
-            "getArtist.view?id=$artistId&f=json",
+            "getArtist.view?id=$artistId",
             null,
             ignoreCachedResponse
         ).filterIsInstance<MediaItem>()
@@ -298,7 +299,7 @@ class NavidromeDataSource @Inject constructor() {
         artistId: String, ignoreCachedResponse: Boolean = false
     ): MediaData.ArtistInfo? = withContext(Dispatchers.IO) {
         getRequest(
-            "getArtistInfo.view?id=$artistId&f=json",
+            "getArtistInfo.view?id=$artistId",
             null,
             ignoreCachedResponse
         ).filterIsInstance<MediaData.ArtistInfo>().firstOrNull()
@@ -311,7 +312,7 @@ class NavidromeDataSource @Inject constructor() {
     ): List<MediaData.Artist> = withContext(Dispatchers.IO) {
         if (query.isNullOrBlank()) getNavidromeArtists(musicFolderIds = musicFolderIds, ignoreCachedResponse = ignoreCachedResponse)
         else getRequest(
-            "search3.view?query=$query&artistCount=100&albumCount=0&songCount=0&f=json",
+            "search3.view?query=$query&artistCount=100&albumCount=0&songCount=0",
             musicFolderIds,
             ignoreCachedResponse
         ).filterIsInstance<MediaData.Artist>()
@@ -333,7 +334,7 @@ class NavidromeDataSource @Inject constructor() {
         playlistId: String, ignoreCachedResponse: Boolean = false
     ): List<MediaItem>? = withContext(Dispatchers.IO) {
         getRequest(
-            "getPlaylist.view?id=$playlistId&f=json",
+            "getPlaylist.view?id=$playlistId",
             null,
             ignoreCachedResponse
         ).filterIsInstance<MediaItem>()
@@ -426,13 +427,13 @@ class NavidromeDataSource @Inject constructor() {
     suspend fun getNavidromePlainLyrics(
         metadata: MediaMetadata?, ignoreCachedResponse: Boolean = false
     ): List<Lyric> = withContext(Dispatchers.IO) {
-        getRequest("getLyrics.view?artist=${metadata?.artist}&title=${metadata?.title}&f=json", null).filterIsInstance<MediaData.PlainLyrics>().getOrNull(0)?.toLyric()?.takeIf { it.content.isNotEmpty() }?.let { listOf(it) } ?: emptyList()
+        getRequest("getLyrics.view?artist=${metadata?.artist}&title=${metadata?.title}", null).filterIsInstance<MediaData.PlainLyrics>().getOrNull(0)?.toLyric()?.takeIf { it.content.isNotEmpty() }?.let { listOf(it) } ?: emptyList()
     }
 
     suspend fun getNavidromeSyncedLyrics(
         songId: String, ignoreCachedResponse: Boolean = false
     ): List<Lyric> = withContext(Dispatchers.IO) {
-        getRequest("getLyricsBySongId.view?id=${songId}&f=json", null, ignoreCachedResponse)
+        getRequest("getLyricsBySongId.view?id=${songId}", null, ignoreCachedResponse)
             .filterIsInstance<MediaData.StructuredLyrics>().flatMap { it.toLyrics() }
     }
 
