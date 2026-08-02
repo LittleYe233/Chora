@@ -16,10 +16,15 @@ android {
         generateLocaleConfig = true
     }
 
+    buildFeatures {
+        resValues = true
+        buildConfig = true
+    }
+
     // START signingConfigs
     val properties = Properties()
-    val propertiesFile: File? = rootProject.file("local.properties")
-    if (propertiesFile != null && propertiesFile.exists()) {
+    val propertiesFile: File = rootProject.file("local.properties")
+    if (propertiesFile.exists()) {
         properties.load(propertiesFile.inputStream())
     }
 
@@ -35,6 +40,7 @@ android {
 
     // START build config
     // A hack to determine if it is a release build
+    //noinspection WrongGradleMethod
     val isReleaseTask = gradle.startParameter.taskNames.any { it.contains("release", ignoreCase = true) }
     val baseVersionName = "1.31.1"
     val baseVersionCode = 311
@@ -113,8 +119,6 @@ dependencies {
     implementation(libs.androidx.tv.material)
 
     implementation(libs.androidx.navigation.compose)
-
-    implementation(libs.androidx.lifecycle.runtime.ktx)
 
     implementation(libs.reorderable)
     implementation(libs.androidx.media)
