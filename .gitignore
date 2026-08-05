@@ -14,3 +14,4 @@ local.properties
 /.idea/
 /.kotlin/
 *.jks
+/.opencode
