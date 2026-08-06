@@ -44,7 +44,7 @@ android {
     val isReleaseTask = gradle.startParameter.taskNames.any { it.contains("release", ignoreCase = true) }
     val baseVersionName = "1.31.1"
     val baseVersionCode = 311
-    val patchVersionCode = 0
+    val patchVersionCode = 1
 
     defaultConfig {
         applicationId = "com.craftworks.music"
