@@ -1,6 +1,7 @@
 package com.craftworks.music.player
 
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -21,8 +22,11 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.ResolvingDataSource
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
+import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaConstants
@@ -42,6 +46,9 @@ import com.craftworks.music.data.repository.RadioRepository
 import com.craftworks.music.data.repository.SongRepository
 import com.craftworks.music.managers.NavidromeManager
 import com.craftworks.music.managers.TranscodeManager
+import com.craftworks.music.managers.audio.EQ_BAND_FREQUENCIES_HZ
+import com.craftworks.music.managers.audio.EqualizerAudioProcessor
+import com.craftworks.music.managers.audio.PreampAudioProcessor
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.managers.settings.LocalDataSettingsManager
 import com.craftworks.music.managers.settings.PlaybackSettingsManager
@@ -59,6 +66,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
@@ -88,6 +96,9 @@ class ChoraMediaLibraryService : MediaLibraryService() {
     @Inject lateinit var appearanceSettingsManager: AppearanceSettingsManager
     @Inject lateinit var playbackSettingsManager: PlaybackSettingsManager
     @Inject lateinit var transcodeManager: TranscodeManager
+
+    @Inject lateinit var preampAudioProcessor: PreampAudioProcessor
+    @Inject lateinit var equalizerAudioProcessor: EqualizerAudioProcessor
 
     @Inject lateinit var albumRepository: AlbumRepository
     @Inject lateinit var artistRepository: ArtistRepository
@@ -256,7 +267,34 @@ class ChoraMediaLibraryService : MediaLibraryService() {
             }
         )
 
-        player = ExoPlayer.Builder(this)
+        // Custom renderers factory that injects the preamp + equalizer processors into the
+        // audio sink. Array order = processing order: preamp FIRST, then the EQ cascade.
+        val renderersFactory = object : DefaultRenderersFactory(this) {
+            /**
+             * Builds the audio sink with the DSP chain: [PreampAudioProcessor] then
+             * [EqualizerAudioProcessor] (array order = processing order).
+             *
+             * Note: Media3 1.10.1 removed the old 4-arg hook with the `enableOffload`
+             * parameter; there is no builder-level offload toggle anymore. Offload playback
+             * bypasses audio processors entirely, so offload is intentionally forced off:
+             * the default RendererConfiguration keeps offloadModePreferred at
+             * OFFLOAD_MODE_DISABLED and the sink itself also defaults to OFFLOAD_MODE_DISABLED.
+             * This guarantees the EQ/preamp chain always applies to every track.
+             */
+            override fun buildAudioSink(
+                context: Context,
+                enableFloatOutput: Boolean,
+                enableAudioOutputPlaybackParams: Boolean
+            ): AudioSink {
+                return DefaultAudioSink.Builder(context)
+                    .setEnableFloatOutput(enableFloatOutput)
+                    .setEnableAudioOutputPlaybackParameters(enableAudioOutputPlaybackParams)
+                    .setAudioProcessors(arrayOf(preampAudioProcessor, equalizerAudioProcessor))
+                    .build()
+            }
+        }
+
+        player = ExoPlayer.Builder(this, renderersFactory)
             .setSeekParameters(SeekParameters.EXACT)
             .setMediaSourceFactory(DefaultMediaSourceFactory(resolvingDataSourceFactory))
             .setWakeMode(
@@ -371,6 +409,41 @@ class ChoraMediaLibraryService : MediaLibraryService() {
                         }
                     }
                 }
+        }
+
+        // Push EQ/preamp settings into the already-built processor singletons. These are
+        // volatile target updates only: no ExoPlayer recreation, so slider changes take
+        // effect in real time without interrupting playback.
+        serviceMainScope.launch {
+            playbackSettingsManager.eqEnabledFlow
+                .distinctUntilChanged()
+                .collect { enabled ->
+                    // Master switch: the same value drives both processors so the preamp
+                    // stays in lockstep with the equalizer (same-on-same-off).
+                    equalizerAudioProcessor.setEnabled(enabled)
+                    preampAudioProcessor.setEnabled(enabled)
+                }
+        }
+
+        serviceMainScope.launch {
+            playbackSettingsManager.eqPreampDbFlow
+                .distinctUntilChanged()
+                .collect { preampAudioProcessor.setTargetGainDb(it) }
+        }
+
+        serviceMainScope.launch {
+            // Combine the 10 band-gain flows into a single FloatArray in ascending frequency
+            // order and push it into the equalizer processor.
+            val bandGainFlows = EQ_BAND_FREQUENCIES_HZ.indices.map { index ->
+                playbackSettingsManager.eqBandGainDbFlow(index)
+            }
+            combine(bandGainFlows) { gains: Array<Float> ->
+                gains.toFloatArray()
+            }.collect { gains ->
+                gains.forEachIndexed { index, db ->
+                    equalizerAudioProcessor.setBandGainDb(index, db)
+                }
+            }
         }
 
         Log.d("AA", "Initialized MediaLibraryService.")

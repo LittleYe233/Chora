@@ -27,4 +27,5 @@ sealed class Screen(val route: String) {
     data object S_Appearance : Screen("s_appearance_screen")
     data object S_Providers : Screen("s_providers_screen")
     data object S_Playback : Screen("s_playback_screen")
+    data object S_Equalizer : Screen("s_equalizer_screen")
 }

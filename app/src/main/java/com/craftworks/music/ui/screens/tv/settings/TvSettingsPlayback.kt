@@ -27,10 +27,13 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.craftworks.music.R
+import com.craftworks.music.data.model.Screen
 import com.craftworks.music.managers.settings.PlaybackSettingsManager
 import com.craftworks.music.ui.elements.dialogs.tv.TranscodingBitrateDialog
 import com.craftworks.music.ui.elements.dialogs.tv.TranscodingFormatDialog
@@ -39,7 +42,7 @@ import kotlin.math.roundToInt
 
 @Composable
 @Preview(device = "id:tv_1080p", showSystemUi = true, showBackground = true)
-fun TvS_PlaybackScreen() {
+fun TvS_PlaybackScreen(navHostController: NavHostController = rememberNavController()) {
     var showWifiTranscodingDialog by remember { mutableStateOf(false) }
     var showDataTranscodingDialog by remember { mutableStateOf(false) }
     var showTranscodingFormatDialog by remember { mutableStateOf(false) }
@@ -86,6 +89,26 @@ fun TvS_PlaybackScreen() {
                 icon = ImageVector.vectorResource(R.drawable.s_p_transcoding),
                 enabled = transcodingFormatEnabled,
                 onClick = { showTranscodingFormatDialog = true }
+            )
+        }
+
+        // Equalizer entry (independent group, between Transcoding and Scrobble)
+        item {
+            val eqEnabled by PlaybackSettingsManager(context).eqEnabledFlow.collectAsState(false)
+
+            SettingsButtonItem(
+                title = stringResource(R.string.Settings_Header_Equalizer),
+                subtitle = if (eqEnabled) {
+                    stringResource(R.string.Setting_Equalizer_Status_Enabled)
+                } else {
+                    stringResource(R.string.Setting_Equalizer_Status_Disabled)
+                },
+                icon = ImageVector.vectorResource(R.drawable.outline_line_weight_24),
+                onClick = {
+                    navHostController.navigate(Screen.S_Equalizer.route) {
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 

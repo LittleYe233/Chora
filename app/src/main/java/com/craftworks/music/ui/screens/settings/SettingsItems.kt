@@ -3,6 +3,7 @@ package com.craftworks.music.ui.screens.settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -181,7 +182,8 @@ fun SettingsSlider(
     steps: Int,
     value: Float,
     minValue: Float, maxValue: Float,
-    onValueChange: (newValue: Float) -> Unit = {}
+    onValueChange: (newValue: Float) -> Unit = {},
+    valueText: String? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -190,16 +192,32 @@ fun SettingsSlider(
             .clip(RoundedCornerShape(2.dp))
             .background(MaterialTheme.colorScheme.surfaceBright)
     ) {
-        Text(
-            text = settingsName,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Normal,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 6.dp).padding(top = 10.dp),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Start
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp).padding(top = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = settingsName,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.weight(1f, fill = false)
+            )
+            if (valueText != null) {
+                Text(
+                    text = valueText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Normal,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    textAlign = TextAlign.End
+                )
+            }
+        }
         Slider(
             modifier = Modifier
                 .padding(horizontal = 20.dp)

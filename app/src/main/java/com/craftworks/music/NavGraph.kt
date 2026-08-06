@@ -63,6 +63,7 @@ import com.craftworks.music.ui.screens.RadioScreen
 import com.craftworks.music.ui.screens.SettingScreen
 import com.craftworks.music.ui.screens.SongsScreen
 import com.craftworks.music.ui.screens.settings.S_AppearanceScreen
+import com.craftworks.music.ui.screens.settings.S_EqualizerScreen
 import com.craftworks.music.ui.screens.settings.S_PlaybackScreen
 import com.craftworks.music.ui.screens.settings.S_ProviderScreen
 import com.craftworks.music.ui.screens.tv.TvAlbumDetails
@@ -77,6 +78,7 @@ import com.craftworks.music.ui.screens.tv.TvSearchScreen
 import com.craftworks.music.ui.screens.tv.TvSettingScreen
 import com.craftworks.music.ui.screens.tv.TvSongsScreen
 import com.craftworks.music.ui.screens.tv.settings.TvS_AppearanceScreen
+import com.craftworks.music.ui.screens.tv.settings.TvS_EqualizerScreen
 import com.craftworks.music.ui.screens.tv.settings.TvS_PlaybackScreen
 import com.craftworks.music.ui.screens.tv.settings.TvS_ProviderScreen
 import com.craftworks.music.ui.viewmodels.AlbumScreenViewModel
@@ -354,9 +356,27 @@ fun SetupNavGraph(
                 }
             ) {
                 if (isTv)
-                    TvS_PlaybackScreen()
+                    TvS_PlaybackScreen(navController)
                 else
                     S_PlaybackScreen(navController)
+            }
+            composable(
+                route = Screen.S_Equalizer.route,
+                enterTransition = {
+                    slideInHorizontally(animationSpec = tween(durationMillis = 300)) { fullWidth ->
+                        fullWidth / 4
+                    } + fadeIn(tween(300))
+                },
+                exitTransition = {
+                    slideOutHorizontally(animationSpec = tween(durationMillis = 300)) { fullWidth ->
+                        fullWidth / 4
+                    } + fadeOut(tween(300))
+                }
+            ) {
+                if (isTv)
+                    TvS_EqualizerScreen()
+                else
+                    S_EqualizerScreen(navController)
             }
         }
 

@@ -25,7 +25,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -64,8 +63,6 @@ fun S_PlaybackScreen(navHostController: NavHostController = rememberNavControlle
     var showTranscodingFormatDialog by remember { mutableStateOf(false) }
 
     val currentNavidromeServer by NavidromeManager.currentServerId.collectAsStateWithLifecycle()
-
-    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -170,6 +167,26 @@ fun S_PlaybackScreen(navHostController: NavHostController = rememberNavControlle
                     )
                 }
                 */
+
+                // Equalizer
+                Column(
+                    modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    val eqEnabled =
+                        PlaybackSettingsManager(context).eqEnabledFlow.collectAsState(false).value
+
+                    SettingsDialogButton(
+                        settingsName = stringResource(R.string.Settings_Header_Equalizer),
+                        settingsSubtitle = if (eqEnabled) stringResource(R.string.Setting_Equalizer_Status_Enabled) else stringResource(R.string.Setting_Equalizer_Status_Disabled),
+                        settingsIcon = ImageVector.vectorResource(R.drawable.outline_line_weight_24),
+                        toggleEvent = {
+                            navHostController.navigate(Screen.S_Equalizer.route) {
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
 
                 // Scrobble Percent
                 Column(
