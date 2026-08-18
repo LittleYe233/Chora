@@ -24,6 +24,8 @@
         <string name="Setting_Transcoding_Format">Transcoding Format</string>
         <string name="Setting_Scrobble_Percent">Min. Scrobble Percentage</string>
         <string name="Setting_Scrobble_Description">Navidrome Only.</string>
+        <string name="Settings_Songs_Preload">Preload All Songs List</string>
+        <string name="Settings_Songs_Preload_Pages">Preload Pages</string>
     <string name="Settings_Header_Equalizer">Equalizer</string>
         <string name="Setting_Equalizer_Enable">Enable Equalizer</string>
         <string name="Setting_Equalizer_Status_Enabled">Enabled</string>

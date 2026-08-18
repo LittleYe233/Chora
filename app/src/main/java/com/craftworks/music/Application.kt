@@ -23,10 +23,13 @@ class ChoraApplication : Application(){
         LocalProviderManager.init(this)
 
         // Best-effort background validation of the stored native-API token:
-        // probe with a /api/keepalive/0 heartbeat, re-login on 401.
+        // probe with a /api/keepalive/0 heartbeat, re-login on 401. Also
+        // prefetch the library song count (getScanStatus) used to clamp the
+        // all-songs preloader's page range.
         applicationScope.launch {
             val server = NavidromeManager.getCurrentServer() ?: return@launch
             navidromeAuthManager.probeStoredToken(server)
+            NavidromeManager.refreshLibrarySongCount()
         }
     }
 }

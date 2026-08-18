@@ -8,12 +8,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -23,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -203,4 +211,47 @@ fun TranscodingFormatDialog(
             }
         }
     }
+}
+
+/**
+ * Dialog editing how many pages the all-songs preloader keeps ahead of the
+ * viewport. Only a valid value within MIN_PRELOAD_PAGES..MAX_PRELOAD_PAGES is
+ * persisted on confirm; anything else keeps the previous setting.
+ */
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
+@Composable
+fun SongsPreloadPagesDialog(setShowDialog: (Boolean) -> Unit) {
+    val context = LocalContext.current
+
+    val preloadPages by PlaybackSettingsManager(context).songsPreloadPages.collectAsState(10)
+    var pagesInput by remember(preloadPages) { mutableStateOf(preloadPages.toString()) }
+
+    AlertDialog(
+        onDismissRequest = { setShowDialog(false) },
+        title = { Text(stringResource(R.string.Settings_Songs_Preload_Pages)) },
+        text = {
+            OutlinedTextField(
+                value = pagesInput,
+                onValueChange = { raw ->
+                    pagesInput = raw.filter { it.isDigit() }.take(2)
+                },
+                label = { Text(stringResource(R.string.Settings_Songs_Preload_Pages)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true
+            )
+        },
+        confirmButton = {
+            Button(onClick = {
+                pagesInput.toIntOrNull()?.let { pages ->
+                    if (pages in PlaybackSettingsManager.MIN_PRELOAD_PAGES..PlaybackSettingsManager.MAX_PRELOAD_PAGES)
+                        runBlocking {
+                            PlaybackSettingsManager(context).setSongsPreloadPages(pages)
+                        }
+                }
+                setShowDialog(false)
+            }) {
+                Text(stringResource(R.string.Action_Done))
+            }
+        }
+    )
 }

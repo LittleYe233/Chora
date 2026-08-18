@@ -9,6 +9,8 @@ import com.craftworks.music.data.NavidromeProvider
 import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +38,24 @@ object NavidromeManager {
 
     private val _syncStatus = MutableStateFlow(false)
 
+    /** Total library song count from getScanStatus; null while unknown. */
+    private val _librarySongCount = MutableStateFlow<Int?>(null)
+    val librarySongCount: StateFlow<Int?> = _librarySongCount.asStateFlow()
+
+    private val managerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** Refreshes the library song count (best-effort; null on failure). */
+    suspend fun refreshLibrarySongCount() {
+        _librarySongCount.value = try {
+            val count = NavidromeDataSource(NavidromeAuthManager()).getLibrarySongCount()
+            Log.d("NAVIDROME", "Library song count: $count")
+            count
+        } catch (e: Exception) {
+            Log.w("NAVIDROME", "getScanStatus failed: ${e.message}")
+            null
+        }
+    }
+
     suspend fun addServer(server: NavidromeProvider, isPing: Boolean = false) {
         Log.d("NAVIDROME", "Added server $server")
         server.url = if (!server.url.trim().startsWith("http"))
@@ -55,6 +75,9 @@ object NavidromeManager {
         if (server.id == _currentServerId.value) {
             _libraries.value = fetchedLibraries
         }
+
+        _librarySongCount.value = null
+        managerScope.launch { refreshLibrarySongCount() }
 
         updateServersFlow()
         saveServers()
@@ -110,6 +133,9 @@ object NavidromeManager {
     fun setCurrentServer(serverId: String?) {
         _currentServerId.value = serverId
         _libraries.value = serverId?.let { servers[it]?.libraryIds } ?: emptyList()
+        // Server switch invalidates the cached library count.
+        _librarySongCount.value = null
+        managerScope.launch { refreshLibrarySongCount() }
         saveServers()
     }
 

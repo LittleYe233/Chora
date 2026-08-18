@@ -26,6 +26,7 @@ import com.craftworks.music.providers.navidrome.parseNavidromePlainLyricsJSON
 import com.craftworks.music.providers.navidrome.parseNavidromePlaylistJSON
 import com.craftworks.music.providers.navidrome.parseNavidromePlaylistsJSON
 import com.craftworks.music.providers.navidrome.parseNavidromeRadioJSON
+import com.craftworks.music.providers.navidrome.parseNavidromeScanStatusJSON
 import com.craftworks.music.providers.navidrome.parseNavidromeSearch3JSON
 import com.craftworks.music.providers.navidrome.parseNavidromeSimilarSongsJSON
 import com.craftworks.music.providers.navidrome.parseNavidromeStatus
@@ -171,6 +172,7 @@ class NavidromeDataSource @Inject constructor(
             when {
                 endpoint.startsWith("ping")         -> parsedData.addAll(parseNavidromeStatus(responseContent))
                 endpoint.startsWith("getMusicFolders") -> parsedData.addAll(parseNavidromeLibrariesJSON(responseContent))
+                endpoint.startsWith("getScanStatus") -> parsedData.addAll(parseNavidromeScanStatusJSON(responseContent))
 
                 endpoint.startsWith("search3")      -> parsedData.addAll(parseNavidromeSearch3JSON(responseContent, server.url, server.username, server.password))
 
@@ -216,6 +218,15 @@ class NavidromeDataSource @Inject constructor(
 
     suspend fun pingNavidromeServer(): List<String> = withContext(Dispatchers.IO) {
         getRequest("ping.view?f=json").filterIsInstance<String>()
+    }
+
+    /**
+     * Total song count of the current server's library (`getScanStatus`),
+     * or null when the call fails or the response carries no count.
+     */
+    suspend fun getLibrarySongCount(): Int? = withContext(Dispatchers.IO) {
+        getRequest("getScanStatus.view?f=json", ignoreCachedResponse = true)
+            .filterIsInstance<Int>().firstOrNull()
     }
 
     suspend fun getNavidromeLibraries(): List<NavidromeLibrary> = withContext(Dispatchers.IO) {

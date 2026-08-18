@@ -21,6 +21,8 @@
     <string name="Setting_Transcoding_Wifi">最高比特率（WiFi）</string>
     <string name="Setting_Transcoding_Data">最高比特率（移动数据）</string>
     <string name="Setting_Transcoding_Format">转码格式</string>
-    <string name="Setting_Scrobble_Percent">最低收听记录百分比</string>
-    <string name="Setting_Scrobble_Description">Navidrome Only.</string>
+        <string name="Setting_Scrobble_Percent">最低收听记录百分比</string>
+        <string name="Setting_Scrobble_Description">Navidrome Only.</string>
+        <string name="Settings_Songs_Preload">预载全部曲目列表</string>
+        <string name="Settings_Songs_Preload_Pages">预载页数</string>
 </resources>

@@ -70,6 +70,8 @@
     <string name="Label_Sort_Song_Artist">Artist</string>
     <string name="Label_Sort_Song_Added_Asc">Added (oldest first)</string>
     <string name="Label_Sort_Song_Added_Desc">Added (newest first)</string>
+    <string name="Label_Total_Songs">All songs loaded — %1$d in library</string>
+    <string name="Label_Total_Songs_Detail">All songs loaded — library: %1$s, loaded: %2$d</string>
     <string name="Label_Sort_Alphabetical">Alphabetical</string>
     <string name="Label_Sort_Starred">Starred</string>
 

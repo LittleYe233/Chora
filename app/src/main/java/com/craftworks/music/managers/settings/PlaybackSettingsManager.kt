@@ -21,11 +21,17 @@ class PlaybackSettingsManager @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) {
     companion object {
+        const val MIN_PRELOAD_PAGES = 1
+        const val MAX_PRELOAD_PAGES = 50
+
         private val TRANSCODING_BITRATE_WIFI_KEY = stringPreferencesKey("transcoding_bitrate_wifi")
         private val TRANSCODING_BITRATE_DATA_KEY = stringPreferencesKey("transcoding_bitrate_data")
         private val TRANSCODING_FORMAT_KEY = stringPreferencesKey("transcoding_format")
 
         private val AUTOPLAY_SONGS = booleanPreferencesKey("autoplay")
+
+        private val SONGS_PRELOAD_ENABLED = booleanPreferencesKey("songs_preload_enabled")
+        private val SONGS_PRELOAD_PAGES = intPreferencesKey("songs_preload_pages")
 
         private val SCROBBLE_PERCENT_KEY = intPreferencesKey("scrobble_percent")
 
@@ -98,6 +104,43 @@ class PlaybackSettingsManager @Inject constructor(
         withContext(NonCancellable) {
             context.dataStore.edit { preferences ->
                 preferences[AUTOPLAY_SONGS] = autoPlay
+            }
+        }
+    }
+
+    /**
+     * Whether the all-songs list prefetches pages ahead of the viewport. Defaults to `false`.
+     */
+    val songsPreloadEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[SONGS_PRELOAD_ENABLED] ?: false
+    }
+
+    /**
+     * Sets whether the all-songs list preloading is enabled.
+     */
+    suspend fun setSongsPreloadEnabled(enabled: Boolean) {
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[SONGS_PRELOAD_ENABLED] = enabled
+            }
+        }
+    }
+
+    /**
+     * Number of pages preloaded ahead of the current viewport page. Defaults to `10`,
+     * always clamped to 1..50.
+     */
+    val songsPreloadPages: Flow<Int> = context.dataStore.data.map { preferences ->
+        (preferences[SONGS_PRELOAD_PAGES] ?: 10).coerceIn(MIN_PRELOAD_PAGES, MAX_PRELOAD_PAGES)
+    }
+
+    /**
+     * Sets the preload page count, clamped to [MIN_PRELOAD_PAGES]..[MAX_PRELOAD_PAGES].
+     */
+    suspend fun setSongsPreloadPages(pages: Int) {
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[SONGS_PRELOAD_PAGES] = pages.coerceIn(MIN_PRELOAD_PAGES, MAX_PRELOAD_PAGES)
             }
         }
     }

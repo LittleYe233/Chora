@@ -25,6 +25,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -43,9 +44,11 @@ import com.craftworks.music.R
 import com.craftworks.music.data.model.Screen
 import com.craftworks.music.managers.NavidromeManager
 import com.craftworks.music.managers.settings.PlaybackSettingsManager
+import com.craftworks.music.ui.elements.dialogs.SongsPreloadPagesDialog
 import com.craftworks.music.ui.elements.dialogs.TranscodingBitrateDialog
 import com.craftworks.music.ui.elements.dialogs.TranscodingFormatDialog
 import com.craftworks.music.ui.elements.dialogs.dialogFocusable
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlin.math.roundToInt
 
@@ -61,6 +64,7 @@ fun S_PlaybackScreen(navHostController: NavHostController = rememberNavControlle
     var showDataTranscodingDialog by remember { mutableStateOf(false) }
 
     var showTranscodingFormatDialog by remember { mutableStateOf(false) }
+    var showPreloadPagesDialog by remember { mutableStateOf(false) }
 
     val currentNavidromeServer by NavidromeManager.currentServerId.collectAsStateWithLifecycle()
 
@@ -168,6 +172,40 @@ fun S_PlaybackScreen(navHostController: NavHostController = rememberNavControlle
                 }
                 */
 
+                // All-songs list preloading
+                Column(
+                    modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    val coroutineScope = rememberCoroutineScope()
+
+                    val preloadEnabled by PlaybackSettingsManager(context)
+                        .songsPreloadEnabled.collectAsStateWithLifecycle(false)
+                    val preloadPages by PlaybackSettingsManager(context)
+                        .songsPreloadPages.collectAsStateWithLifecycle(10)
+
+                    SettingsSwitch(
+                        preloadEnabled,
+                        stringResource(R.string.Settings_Songs_Preload),
+                        ImageVector.vectorResource(R.drawable.rounded_download_24),
+                        toggleEvent = {
+                            coroutineScope.launch {
+                                PlaybackSettingsManager(context).setSongsPreloadEnabled(!preloadEnabled)
+                            }
+                        }
+                    )
+
+                    // Always visible; only editable while preloading is enabled
+                    // (same graying behavior as the Transcoding Format entry).
+                    SettingsDialogButton(
+                        settingsName = stringResource(R.string.Settings_Songs_Preload_Pages),
+                        settingsSubtitle = preloadPages.toString(),
+                        settingsIcon = ImageVector.vectorResource(R.drawable.rounded_format_list_numbered_24),
+                        enabled = preloadEnabled,
+                        toggleEvent = { showPreloadPagesDialog = true }
+                    )
+                }
+
                 // Equalizer
                 Column(
                     modifier = Modifier.clip(RoundedCornerShape(16.dp)),
@@ -219,6 +257,9 @@ fun S_PlaybackScreen(navHostController: NavHostController = rememberNavControlle
         }, false)
         if (showTranscodingFormatDialog) TranscodingFormatDialog(setShowDialog = {
             showTranscodingFormatDialog = it
+        })
+        if (showPreloadPagesDialog) SongsPreloadPagesDialog(setShowDialog = {
+            showPreloadPagesDialog = it
         })
     }
 }

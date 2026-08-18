@@ -53,6 +53,8 @@
     <string name="Label_Sort_Song_Artist">艺术家</string>
     <string name="Label_Sort_Song_Added_Asc">添加时间（从旧到新）</string>
     <string name="Label_Sort_Song_Added_Desc">添加时间（从新到旧）</string>
+    <string name="Label_Total_Songs">已加载全部曲目 — 共 %1$d 首</string>
+    <string name="Label_Total_Songs_Detail">已加载全部曲目 — 媒体库共 %1$s 首，已加载 %2$d 首</string>
     <string name="Label_Sort_Alphabetical">字母序</string>
     <string name="Label_Sort_Starred">收藏</string>
     <!-- Connection Errors -->

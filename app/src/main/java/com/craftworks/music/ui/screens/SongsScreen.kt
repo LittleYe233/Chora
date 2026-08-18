@@ -1,5 +1,6 @@
 package com.craftworks.music.ui.screens
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,11 +23,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,9 +43,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -62,6 +69,7 @@ import com.craftworks.music.ui.playing.dpToPx
 import com.craftworks.music.ui.viewmodels.SongsScreenViewModel
 import kotlinx.coroutines.launch
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true, showSystemUi = true)
@@ -73,7 +81,32 @@ fun SongsScreen(
     val allSongsList by viewModel.allSongs.collectAsStateWithLifecycle()
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
 
+    val allSongsLoaded by viewModel.allSongsLoaded.collectAsStateWithLifecycle()
+    val totalSongCount by viewModel.totalSongCount.collectAsStateWithLifecycle()
+
     val coroutineScope = rememberCoroutineScope()
+
+    // Start/stop the preload scheduler with this screen's lifecycle.
+    DisposableEffect(Unit) {
+        viewModel.onScreenEntered()
+        onDispose { viewModel.onScreenExited() }
+    }
+
+    // Announce the fully-loaded library once per load cycle: server count (N)
+    // alongside the actually loaded count (M).
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        viewModel.libraryLoadedEvent.collect { (serverCount, loadedCount) ->
+            snackbarHostState.showSnackbar(
+                context.getString(
+                    R.string.Label_Total_Songs_Detail,
+                    serverCount?.toString() ?: "?",
+                    loadedCount
+                )
+            )
+        }
+    }
 
     val state = rememberPullToRefreshState()
     val isRefreshing by viewModel.isLoading.collectAsStateWithLifecycle()
@@ -112,6 +145,7 @@ fun SongsScreen(
     ) {
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopBarWithSearch(
                     headerText = stringResource(R.string.songs),
@@ -265,7 +299,21 @@ fun SongsScreen(
                         onSetRating = { songToRate = it },
                         isSearch = false,
                         showFavoritesOnly = showFavoritesOnly,
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        onTopVisibleRemotePageChanged = viewModel::onViewportTopPageChanged,
+                        footer = if (allSongsLoaded) {
+                            {
+                                Text(
+                                    text = stringResource(R.string.Label_Total_Songs, totalSongCount),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 12.dp)
+                                )
+                            }
+                        } else null
                     )
                 }
             }

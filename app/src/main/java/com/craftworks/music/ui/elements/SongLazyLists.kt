@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +45,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.session.MediaController
 import com.craftworks.music.R
+import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
 import com.craftworks.music.data.model.MediaData
 import com.craftworks.music.data.model.albumList
 import com.craftworks.music.data.model.songsList
@@ -53,6 +55,7 @@ import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.player.SongHelper
 import com.craftworks.music.ui.viewmodels.AlbumScreenViewModel
 import com.craftworks.music.ui.viewmodels.SongsScreenViewModel
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
@@ -66,11 +69,30 @@ fun SongsHorizontalColumn(
     onSetRating: (sond: MediaItem) -> Unit,
     isSearch: Boolean? = false,
     showFavoritesOnly: Boolean = false,
-    viewModel: SongsScreenViewModel? = null
+    viewModel: SongsScreenViewModel? = null,
+    onTopVisibleRemotePageChanged: ((pageIndex: Int) -> Unit)? = null,
+    footer: (@Composable () -> Unit)? = null
 ){
     val listState = rememberLazyListState()
 
     val showDividers by AppearanceSettingsManager(LocalContext.current).showProviderDividersFlow.collectAsStateWithLifecycle(true)
+
+    // Report the page index (0-based, page size = API_SONG_PAGE_SIZE) of the
+    // topmost visible remote song, so the ViewModel can preload ahead of it.
+    if (onTopVisibleRemotePageChanged != null && isSearch == false) {
+        val currentList by rememberUpdatedState(songList)
+        val currentDividers by rememberUpdatedState(showDividers)
+        val currentCallback by rememberUpdatedState(onTopVisibleRemotePageChanged)
+        LaunchedEffect(listState) {
+            snapshotFlow { listState.firstVisibleItemIndex }
+                .distinctUntilChanged()
+                .collect { firstIndex ->
+                    currentCallback(
+                        topVisibleRemotePageIndex(firstIndex, currentList, currentDividers)
+                    )
+                }
+        }
+    }
 
     // Load more songs at scroll
     if (NavidromeManager.checkActiveServers() && isSearch == false && !showFavoritesOnly){
@@ -145,7 +167,40 @@ fun SongsHorizontalColumn(
                 )
             }
         }
+
+        if (footer != null) {
+            item(key = "songs_list_footer") { footer() }
+        }
     }
+}
+
+/**
+ * Maps the LazyColumn's first visible item index to the 0-based page index of
+ * the topmost visible remote (Navidrome) song, mirroring the exact item layout
+ * (optional per-group header + group items). Local songs and headers map to
+ * remote page 0.
+ */
+private fun topVisibleRemotePageIndex(
+    firstVisibleIndex: Int,
+    songList: List<MediaItem>,
+    showDividers: Boolean
+): Int {
+    val groups = songList.groupBy { song ->
+        if (song.mediaMetadata.extras?.getString("navidromeID")?.startsWith("Local_") == true) "Local" else "Navidrome"
+    }
+    val showHeaders = showDividers && groups.size > 1
+    var running = 0
+    for ((groupName, songs) in groups) {
+        if (showHeaders) {
+            if (firstVisibleIndex == running) return 0   // resting on a group header
+            running++
+        }
+        if (firstVisibleIndex < running + songs.size)
+            return if (groupName == "Local") 0
+            else (firstVisibleIndex - running) / NavidromeDataSource.API_SONG_PAGE_SIZE
+        running += songs.size
+    }
+    return 0
 }
 //endregion
 
