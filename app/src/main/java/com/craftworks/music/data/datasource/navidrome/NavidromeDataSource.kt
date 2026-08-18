@@ -5,14 +5,18 @@ import android.util.Log
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.craftworks.music.data.NavidromeLibrary
+import com.craftworks.music.data.NavidromeProvider
 import com.craftworks.music.data.model.Lyric
 import com.craftworks.music.data.model.MediaData
+import com.craftworks.music.data.model.SongSortOrder
 import com.craftworks.music.data.model.toLyric
 import com.craftworks.music.data.model.toLyrics
+import com.craftworks.music.managers.NavidromeAuthManager
 import com.craftworks.music.managers.NavidromeManager
 import com.craftworks.music.providers.navidrome.navidromeStatus
 import com.craftworks.music.providers.navidrome.parseNavidromeAlbumJSON
 import com.craftworks.music.providers.navidrome.parseNavidromeAlbumListJSON
+import com.craftworks.music.providers.navidrome.parseNavidromeApiSongsJSON
 import com.craftworks.music.providers.navidrome.parseNavidromeArtistAlbumsJSON
 import com.craftworks.music.providers.navidrome.parseNavidromeArtistBiographyJSON
 import com.craftworks.music.providers.navidrome.parseNavidromeArtistsJSON
@@ -35,6 +39,7 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.SIMPLE
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.headers
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
@@ -55,7 +60,9 @@ import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
 @Singleton
-class NavidromeDataSource @Inject constructor() {
+class NavidromeDataSource @Inject constructor(
+    private val authManager: NavidromeAuthManager
+) {
     private val json = Json { ignoreUnknownKeys = true }
 
     private val client: HttpClient by lazy {
@@ -74,6 +81,9 @@ class NavidromeDataSource @Inject constructor() {
     private val insecureClient: HttpClient by lazy { buildInsecureClient() }
 
     companion object {
+        // Page size mandated by the sorting feature spec for /api/song.
+        const val API_SONG_PAGE_SIZE = 100
+
         fun md5Hash(input: String): String {
             val md = MessageDigest.getInstance("MD5")
             val hashBytes = md.digest(input.toByteArray())
@@ -271,6 +281,63 @@ class NavidromeDataSource @Inject constructor() {
         ignoreCachedResponse
         )).filterIsInstance<MediaItem>()
     }
+
+    // Songs via the native /api/song endpoint (server-side sorting). Deliberately
+    // does NOT reuse getRequest(): that helper speaks the Subsonic protocol
+    // (salt/token query params + subsonic-response envelope), while /api/song
+    // authenticates with the X-ND-Authorization Bearer header.
+    suspend fun getNavidromeSongsSorted(
+        sortOrder: SongSortOrder,
+        songOffset: Int = 0,
+        favoritesOnly: Boolean = false,
+    ): List<MediaItem> = withContext(Dispatchers.IO) {
+        val server = NavidromeManager.getCurrentServer() ?: return@withContext emptyList()
+        val sort = sortOrder.apiSort ?: return@withContext emptyList()
+        val order = sortOrder.apiOrder ?: return@withContext emptyList()
+
+        val url = URLBuilder("${server.url}/api/song").apply {
+            parameters.append("_start", songOffset.toString())
+            parameters.append("_end", (songOffset + API_SONG_PAGE_SIZE).toString())
+            parameters.append("_sort", sort)
+            parameters.append("_order", order)
+            parameters.append("missing", "false")
+            if (favoritesOnly) parameters.append("starred", "true")
+        }.buildString()
+
+        NavidromeManager.setSyncingStatus(true)
+        try {
+            var token = authManager.ensureValidToken()
+            var response = token?.let { executeApiSongsRequest(url, server, it) }
+
+            // Stored JWT rejected (expired): login once and retry.
+            if (response?.status == HttpStatusCode.Unauthorized) {
+                token = authManager.login(server)
+                response = token?.let { executeApiSongsRequest(url, server, it) }
+            }
+
+            when {
+                response == null -> emptyList()
+                response.status != HttpStatusCode.OK -> {
+                    Log.w("NAVIDROME", "HTTP ${response.status} for URL: $url")
+                    emptyList()
+                }
+                else -> parseNavidromeApiSongsJSON(response.bodyAsText(), server.url, server.username, server.password)
+            }
+        } catch (e: Exception) {
+            Log.e("NAVIDROME", "Network error for URL: $url", e)
+            navidromeStatus.value = e.message.toString()
+            emptyList()
+        } finally {
+            NavidromeManager.setSyncingStatus(false)
+        }
+    }
+
+    private suspend fun executeApiSongsRequest(
+        url: String, server: NavidromeProvider, token: String
+    ): HttpResponse =
+        authManager.clientFor(server).get(url) {
+            header("X-ND-Authorization", "Bearer $token")
+        }
 
     suspend fun getNavidromeSong(
         songId: String, ignoreCachedResponse: Boolean = false

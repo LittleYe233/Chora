@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import com.craftworks.music.data.NavidromeProvider
 import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
+import com.craftworks.music.managers.NavidromeAuthManager
 import com.craftworks.music.managers.NavidromeManager
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
@@ -19,7 +20,7 @@ suspend fun getNavidromeStatus(server: NavidromeProvider) {
     withContext(NonCancellable) {
         try {
             NavidromeManager.addServer(server, true)
-            NavidromeDataSource().pingNavidromeServer()
+            NavidromeDataSource(NavidromeAuthManager()).pingNavidromeServer()
         }
         catch (ex: Exception) {
             navidromeStatus.value = ex.message.toString()

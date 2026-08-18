@@ -10,6 +10,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import com.craftworks.music.data.model.MediaData
+import com.craftworks.music.data.model.SongSortOrder
 import com.craftworks.music.data.model.SortOrder
 import com.craftworks.music.data.model.toMediaItem
 import com.craftworks.music.data.model.toSong
@@ -36,6 +37,7 @@ class LocalDataSettingsManager @Inject constructor(
         private val MEDIA_RESUMPTION_TIME = longPreferencesKey("media_resumption_timestamp")
 
         private val SORT_ALBUM_ORDER = stringPreferencesKey("sort_album_order")
+        private val SONG_SORT_ORDER = stringPreferencesKey("sort_songs_order")
         private val SHOW_FAVORITES_ONLY = booleanPreferencesKey("show_favorites_only")
     }
 
@@ -110,6 +112,19 @@ class LocalDataSettingsManager @Inject constructor(
         withContext(NonCancellable) {
             context.dataStore.edit { preferences ->
                 preferences[SORT_ALBUM_ORDER] = sortOrder.key
+            }
+        }
+    }
+
+    val songSortOrder: Flow<SongSortOrder> =
+        context.dataStore.data.map { preferences ->
+            SongSortOrder.entries.find { it.key == preferences[SONG_SORT_ORDER] } ?: SongSortOrder.DEFAULT
+        }
+
+    suspend fun saveSongSortOrder(sortOrder: SongSortOrder) {
+        withContext(NonCancellable) {
+            context.dataStore.edit { preferences ->
+                preferences[SONG_SORT_ORDER] = sortOrder.key
             }
         }
     }

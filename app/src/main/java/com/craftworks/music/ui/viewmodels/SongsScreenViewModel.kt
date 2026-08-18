@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.StarRating
+import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
+import com.craftworks.music.data.model.SongSortOrder
 import com.craftworks.music.data.repository.SongRepository
 import com.craftworks.music.managers.DataRefreshManager
 import com.craftworks.music.managers.settings.LocalDataSettingsManager
@@ -12,6 +14,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,24 +36,57 @@ class SongsScreenViewModel @Inject constructor(
     private val _showFavoritesOnly = MutableStateFlow(false)
     val showFavoritesOnly: StateFlow<Boolean> = _showFavoritesOnly.asStateFlow()
 
+    private val _songSortOrder = MutableStateFlow(SongSortOrder.DEFAULT)
+    val songSortOrder: StateFlow<SongSortOrder> = _songSortOrder.asStateFlow()
+
+    // Session cache: pages already fetched per (sort mode, favorites) pair.
+    // Switching back to a previously used combination replays without network.
+    private val sessionCache = mutableMapOf<Pair<SongSortOrder, Boolean>, MutableList<MediaItem>>()
+    private val reachedEnd = mutableSetOf<Pair<SongSortOrder, Boolean>>()
+
     init {
-        getSongs()
         viewModelScope.launch {
-            localDataSettingsManager.showFavoriteOnly.collect { showFavorites ->
-                _showFavoritesOnly.value = showFavorites
-                getSongs()
-            }
+            combine(
+                localDataSettingsManager.songSortOrder,
+                localDataSettingsManager.showFavoriteOnly
+            ) { order, favorites -> order to favorites }
+                .collect { (order, favorites) ->
+                    _songSortOrder.value = order
+                    _showFavoritesOnly.value = favorites
+                    onDisplayConfigChanged()
+                }
+        }
+        viewModelScope.launch {
             DataRefreshManager.dataSourceChangedEvent.collect {
+                // Server/library selection changed: cached pages are stale.
+                sessionCache.clear()
+                reachedEnd.clear()
                 getSongs()
             }
         }
+    }
+
+    private fun onDisplayConfigChanged() {
+        val key = _songSortOrder.value to _showFavoritesOnly.value
+        val cached = sessionCache[key]
+        if (!cached.isNullOrEmpty())
+            _allSongs.value = cached.toList()
+        else
+            getSongs()
     }
 
     fun getSongs() {
         viewModelScope.launch {
             _isLoading.value = true
             coroutineScope {
-                _allSongs.value = songRepository.getSongs(ignoreCachedResponse = true, favoritesOnly = _showFavoritesOnly.value)
+                val key = _songSortOrder.value to _showFavoritesOnly.value
+                val songs = songRepository.getSongs(
+                    ignoreCachedResponse = true,
+                    favoritesOnly = _showFavoritesOnly.value,
+                    sortOrder = _songSortOrder.value
+                )
+                sessionCache[key] = songs.toMutableList()
+                _allSongs.value = songs
             }
             _isLoading.value = false
         }
@@ -58,12 +94,32 @@ class SongsScreenViewModel @Inject constructor(
 
     fun getMoreSongs(size: Int){
         viewModelScope.launch {
+            val key = _songSortOrder.value to _showFavoritesOnly.value
+            // /api/song signals the end with a short (or empty) page; once
+            // reached, stop fetching for this combination. The Default
+            // (search3) path keeps its original behavior.
+            if (key.first != SongSortOrder.DEFAULT && key in reachedEnd) return@launch
             _isLoading.value = true
             coroutineScope {
                 val songOffset = _allSongs.value.size
-                _allSongs.value += songRepository.getSongs(songCount = size, songOffset = songOffset)
+                val more = songRepository.getSongs(
+                    songCount = size,
+                    songOffset = songOffset,
+                    favoritesOnly = _showFavoritesOnly.value,
+                    sortOrder = _songSortOrder.value
+                )
+                sessionCache.getOrPut(key) { _allSongs.value.toMutableList() }.addAll(more)
+                _allSongs.value += more
+                if (key.first != SongSortOrder.DEFAULT && more.size < NavidromeDataSource.API_SONG_PAGE_SIZE)
+                    reachedEnd.add(key)
             }
             _isLoading.value = false
+        }
+    }
+
+    fun setSortOrder(sortOrder: SongSortOrder) {
+        viewModelScope.launch {
+            localDataSettingsManager.saveSongSortOrder(sortOrder)
         }
     }
 

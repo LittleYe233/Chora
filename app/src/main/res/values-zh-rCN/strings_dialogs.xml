@@ -47,6 +47,12 @@
     <string name="Label_NoDescription">No Description Available.</string>
     <!-- Sorting -->
     <string name="Label_Sorting">排序方式</string>
+    <string name="Label_Sort_Default">默认</string>
+    <string name="Label_Sort_Song_Title">标题</string>
+    <string name="Label_Sort_Song_Album">专辑</string>
+    <string name="Label_Sort_Song_Artist">艺术家</string>
+    <string name="Label_Sort_Song_Added_Asc">添加时间（从旧到新）</string>
+    <string name="Label_Sort_Song_Added_Desc">添加时间（从新到旧）</string>
     <string name="Label_Sort_Alphabetical">字母序</string>
     <string name="Label_Sort_Starred">收藏</string>
     <!-- Connection Errors -->

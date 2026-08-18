@@ -3,6 +3,7 @@ package com.craftworks.music.data.repository
 import androidx.media3.common.MediaItem
 import com.craftworks.music.data.datasource.local.LocalDataSource
 import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
+import com.craftworks.music.data.model.SongSortOrder
 import com.craftworks.music.managers.LocalProviderManager
 import com.craftworks.music.managers.NavidromeManager
 import kotlinx.coroutines.Deferred
@@ -20,10 +21,11 @@ class SongRepository @Inject constructor(
 
     suspend fun getSongs(
         query: String? = "",
-        songCount: Int = 100, 
+        songCount: Int = 100,
         songOffset: Int = 0,
         ignoreCachedResponse: Boolean = false,
         favoritesOnly: Boolean = false,
+        sortOrder: SongSortOrder = SongSortOrder.DEFAULT,
     ): List<MediaItem> = coroutineScope {
         val deferredSongs = mutableListOf<Deferred<List<MediaItem>>>()
 
@@ -33,7 +35,10 @@ class SongRepository @Inject constructor(
 
         if (NavidromeManager.checkActiveServers())
             deferredSongs.add(async {
-                navidromeDataSource.getNavidromeSongs(query, songCount, songOffset, ignoreCachedResponse, favoritesOnly = favoritesOnly)
+                if (sortOrder == SongSortOrder.DEFAULT)
+                    navidromeDataSource.getNavidromeSongs(query, songCount, songOffset, ignoreCachedResponse, favoritesOnly = favoritesOnly)
+                else
+                    navidromeDataSource.getNavidromeSongsSorted(sortOrder, songOffset, favoritesOnly = favoritesOnly)
             })
 
         deferredSongs.awaitAll().flatten()

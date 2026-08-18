@@ -5,6 +5,7 @@ import com.craftworks.music.data.datasource.local.LocalDataSource
 import com.craftworks.music.data.datasource.lrclib.LrclibDataSource
 import com.craftworks.music.data.datasource.navidrome.NavidromeDataSource
 import com.craftworks.music.data.datasource.netease.NeteaseDataSource
+import com.craftworks.music.managers.NavidromeAuthManager
 import com.craftworks.music.managers.settings.AppearanceSettingsManager
 import com.craftworks.music.managers.settings.LocalDataSettingsManager
 import com.craftworks.music.managers.settings.MediaProviderSettingsManager
@@ -32,8 +33,10 @@ object DataSourceModule {
 
     @Singleton
     @Provides
-    fun provideNavidromeDataSource(): NavidromeDataSource {
-        return NavidromeDataSource()
+    fun provideNavidromeDataSource(
+        navidromeAuthManager: NavidromeAuthManager
+    ): NavidromeDataSource {
+        return NavidromeDataSource(navidromeAuthManager)
     }
 
     @Singleton

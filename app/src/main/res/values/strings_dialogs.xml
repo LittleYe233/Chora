@@ -64,6 +64,12 @@
 
     <!-- Sorting -->
     <string name="Label_Sorting">Sort By</string>
+    <string name="Label_Sort_Default">Default</string>
+    <string name="Label_Sort_Song_Title">Title</string>
+    <string name="Label_Sort_Song_Album">Album</string>
+    <string name="Label_Sort_Song_Artist">Artist</string>
+    <string name="Label_Sort_Song_Added_Asc">Added (oldest first)</string>
+    <string name="Label_Sort_Song_Added_Desc">Added (newest first)</string>
     <string name="Label_Sort_Alphabetical">Alphabetical</string>
     <string name="Label_Sort_Starred">Starred</string>
 

@@ -11,9 +11,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,6 +50,7 @@ import androidx.media3.common.StarRating
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import com.craftworks.music.R
+import com.craftworks.music.data.model.SongSortOrder
 import com.craftworks.music.player.SongHelper
 import com.craftworks.music.ui.elements.RippleEffect
 import com.craftworks.music.ui.elements.SongsHorizontalColumn
@@ -87,6 +91,17 @@ fun SongsScreen(
 
 
     val showFavoritesOnly by viewModel.showFavoritesOnly.collectAsStateWithLifecycle()
+    val songSortOrder by viewModel.songSortOrder.collectAsStateWithLifecycle()
+
+    var showSortMenu by remember { mutableStateOf(false) }
+    val sortMenuItems = listOf(
+        SongSortOrder.DEFAULT to R.string.Label_Sort_Default,
+        SongSortOrder.TITLE to R.string.Label_Sort_Song_Title,
+        SongSortOrder.ALBUM to R.string.Label_Sort_Song_Album,
+        SongSortOrder.ARTIST to R.string.Label_Sort_Song_Artist,
+        SongSortOrder.ADDED_ASC to R.string.Label_Sort_Song_Added_Asc,
+        SongSortOrder.ADDED_DESC to R.string.Label_Sort_Song_Added_Desc,
+    )
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -121,14 +136,45 @@ fun SongsScreen(
                         )
                     },
                     extraAction = {
-                        Box {
-                            IconButton (
-                                onClick = { viewModel.setShowFavoritesOnly(!showFavoritesOnly) }
-                            ) {
-                                Icon (
-                                    imageVector = ImageVector.vectorResource(if (showFavoritesOnly) androidx.media3.session.R.drawable.media3_icon_heart_filled else androidx.media3.session.R.drawable.media3_icon_heart_unfilled),
-                                    contentDescription = stringResource(R.string.Label_Toggle_Favorites),
-                                )
+                        Row {
+                            Box {
+                                IconButton (
+                                    onClick = { viewModel.setShowFavoritesOnly(!showFavoritesOnly) }
+                                ) {
+                                    Icon (
+                                        imageVector = ImageVector.vectorResource(if (showFavoritesOnly) androidx.media3.session.R.drawable.media3_icon_heart_filled else androidx.media3.session.R.drawable.media3_icon_heart_unfilled),
+                                        contentDescription = stringResource(R.string.Label_Toggle_Favorites),
+                                    )
+                                }
+                            }
+
+                            Box {
+                                IconButton(
+                                    onClick = { showSortMenu = true }
+                                ) {
+                                    Icon(
+                                        imageVector = ImageVector.vectorResource(R.drawable.rounded_sort_24),
+                                        contentDescription = stringResource(R.string.Label_Sorting),
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = showSortMenu,
+                                    onDismissRequest = { showSortMenu = false }
+                                ) {
+                                    sortMenuItems.forEach { (order, labelRes) ->
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(labelRes)) },
+                                            trailingIcon = {
+                                                if (order == songSortOrder)
+                                                    Icon(Icons.Rounded.Check, contentDescription = null)
+                                            },
+                                            onClick = {
+                                                viewModel.setSortOrder(order)
+                                                showSortMenu = false
+                                            }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

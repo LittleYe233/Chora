@@ -49,7 +49,7 @@ object NavidromeManager {
         if (isPing)
             return
 
-        val fetchedLibraries = NavidromeDataSource().getNavidromeLibraries().map { Pair(it, true) }
+        val fetchedLibraries = NavidromeDataSource(NavidromeAuthManager()).getNavidromeLibraries().map { Pair(it, true) }
 
         setServerLibraries(server.id, fetchedLibraries)
         if (server.id == _currentServerId.value) {
@@ -148,6 +148,14 @@ object NavidromeManager {
         }
         _libraries.value = _currentServerId.value?.let { servers[it]?.libraryIds } ?: emptyList()
         updateServersFlow()
+    }
+
+    // Persist a native-API JWT for a server without broadcasting a data-source
+    // change (unlike saveServers), so token refreshes don't reload the UI.
+    fun persistServerToken(serverId: String, token: String?) {
+        servers[serverId]?.jwtToken = token
+        val serversJson = json.encodeToString(servers as Map<String, NavidromeProvider>)
+        sharedPreferences.edit { putString(PREF_SERVERS, serversJson) }
     }
 
     fun getEnabledLibraryIdsForCurrentServer(): List<Int> {
